@@ -1,7 +1,7 @@
 # The Devil is in the Details: StyleFeatureEditor for Detail-Rich StyleGAN Inversion and High Quality Image Editing (CVPR 2024)
 
 <a href="https://arxiv.org/abs/2406.10601"><img src="https://img.shields.io/badge/arXiv-2404.01094-b31b1b.svg" height=22.5></a>
-<a href="https://colab.research.google.com/#fileId=https://github.com/AIRI-Institute/StyleFeatureEditor/blob/main/notebook/StyleFeatureEditor_inference.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" height=22.5></a>
+<a href="https://colab.research.google.com/#fileId=https://github.com/FusionBrainLab/StyleFeatureEditor/blob/main/notebook/StyleFeatureEditor_inference.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" height=22.5></a>
 <a href="https://huggingface.co/spaces/AIRI-Institute/StyleFeatureEditor"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-md.svg" height=22.5></a>
 [![License](https://img.shields.io/github/license/AIRI-Institute/al_toolbox)](./LICENSE)
 
@@ -33,7 +33,7 @@ SFE is able to edit a real face image with the desired editing. It first reconst
 
 * Clone this repo:
 ```bash
-git clone https://github.com/AIRI-Institute/StyleFeatureEditor
+git clone https://github.com/FusionBrainLab/StyleFeatureEditor
 cd StyleFeatureEditor
 ```
 
@@ -80,7 +80,7 @@ Examples of how our method works on several real images. You can find inference 
 </p>
 
 ### Inference Notebook
-We provide a [Jupiter Notebook](https://colab.research.google.com/#fileId=https://github.com/AIRI-Institute/StyleFeatureEditor/blob/main/notebook/StyleFeatureEditor_inference.ipynb) that demonstrates the workings of our method. It includes downloading all the necessary components, running our method on several examples and creating a gif.
+We provide a [Jupiter Notebook](https://colab.research.google.com/#fileId=https://github.com/FusionBrainLab/StyleFeatureEditor/blob/main/notebook/StyleFeatureEditor_inference.ipynb) that demonstrates the workings of our method. It includes downloading all the necessary components, running our method on several examples and creating a gif.
 
 ### Inference single sample
 If you need to edit single or several images, you can use `SimpleRunner` from [runners/simple_runner.py](runners/simple_runner.py). You need to initialize it with the path to the sfe checkpoints. To edit the image you need to use `.edit()` method and pass path to the input image, name of desired editing, power of desired editing and path where to save edited image:
@@ -248,7 +248,7 @@ If you are using W&B, it is better to pass `train.start_step` according to the l
 * Training stage 1
 
 <p align="center">
-  <img src="https://github.com/AIRI-Institute/StyleFeatureEditor/blob/main/assets/phase1.png" width="100%"/>
+  <img src="https://github.com/FusionBrainLab/StyleFeatureEditor/blob/main/assets/phase1.png" width="100%"/>
   <br>
 <b>The Inverter training pipeline.</b> Input image $X$ is passed to Feature-Style-like backbone that predicts $w \in W^+$ and $F_{pred} \in \mathcal{F}_k$. Then $F_w = G(w_{0:k})$ is synthesized and passed with $F_{pred}$ to the Fuser that predicts $F_k$. Inversion $\widehat{X} = G(F_k, w_{k+1:N})$ is generated. Additional reconstruction $\widehat{X}_w = G(w_{0:N})$ is synthesized from w-latents only. Loss is calculated for pairs $(X, \widehat{X})$ and $(X, \widehat{X}_w)$
 </p>
@@ -256,7 +256,7 @@ If you are using W&B, it is better to pass `train.start_step` according to the l
 * Training stage 2 and Inference
 
 <p align="center">
-  <img src="https://github.com/AIRI-Institute/StyleFeatureEditor/blob/main/assets/phase2.png" width="100%"/>
+  <img src="https://github.com/FusionBrainLab/StyleFeatureEditor/blob/main/assets/phase2.png" width="100%"/>
   <br>
 <b>The Feature Editor training pipeline and inference.</b> To obtain <b>editing loss</b>, one need to synthesize training samples: $X_{E}$ -- training input, and $X_{E}'$  -- training target. The pre-trained encoder $E$ takes the real image $X$ and predicts $w_{E} \in W^+$. Edited direction $d \in \mathcal{D}$ is randomly sampled, after which $w_E$ is edited to $w_E' = w_E + d$. Image $X_{E}$ and intermediate features $F_{w_{E}}$ are synthesized from $w_{E}$, while $X_{E}'$ and $F_{w_{E}'}$ are synthesized from $w_{E}'$ via generator $G$. $X_{E}$ is used as input and passed to frozen Inverter $I$ that predicts $F_k$ and $w$ that is edited to $w'$ according sampled $d$. Then $\Delta$ is calculated, and Feature Editor $H$ edits $F_k$ according $\Delta$. The edited reconstruction $\widehat{X}_{E}'$ is synthesized from $F_k'$ and $w_{k+1:N}'$. <b>Editing loss </b> is calculated between $X_{E}'$ and $\widehat{X}_{E}'$. To obtain the <b>inversion loss</b>, the real image $X$ is passed to $I$ that predicts $w$ and $F_k$, $F_k$ is edited to $F_k'$ by $H$ with $\Delta = 0$. The inversion $\widehat{X}$ is synthesized from $F_k'$ and $w_{k+1:N}$. The Inversion loss is calculated between $X$ and $\widehat{X}$. <b>Inference pipeline </b> is the same as synthesizing $\widehat{X}_{E}'$ but with the assumption that $I$ takes real image $X$ instead of $X_E$.
 </p>
