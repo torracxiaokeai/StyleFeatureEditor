@@ -252,7 +252,12 @@ class BaseTrainingRunner(BaseRunner):
                 self.save_checkpoint()
 
     def train_step(self):
-        x  = next(self.train_dataloader)
+        # 在每次step开始时打印当前的步骤信息
+        if self.global_step % 2 == 0:  # 每50步打印一次，避免输出过多
+            progress = self.global_step / self.config.train.steps * 100
+            print(f"Step {self.global_step}/{self.config.train.steps} ({progress:.2f}%)")
+        
+        x = next(self.train_dataloader)
         x = x.to(self.device).float()
         output = self.forward(x)
 
@@ -457,6 +462,8 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
     def forward(self, x):
         # get inversion batch
         y_hat_inv, w, fused_feat, w_feat = self.method(x, return_latents=True)
+        # w变量未被使用，可以立即删除
+        del w, fused_feat, w_feat
 
         # get editing batch
         with torch.no_grad():
@@ -475,7 +482,12 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 return_features=True
             )
 
+            # 第二阶段-第一部分-编辑阶段
+            # get_edited_latent尤其要进行更换
             edited_w_e4e = self.get_edited_latent(w_e4e, d, [strenght])
+            # w_e4e已不再使用
+            del w_e4e
+            
             if isinstance(edited_w_e4e, tuple):
                 # stylespace case
                 y_E, fy_e4e = self.method.decoder(
@@ -494,16 +506,25 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                     randomize_noise=False,
                     return_features=True
                 )
+            # edited_w_e4e已不再使用
+            del edited_w_e4e
 
             y_E_256 = F.interpolate(y_E, size=(256, 256), mode="bilinear", align_corners=False) # X'_E
             x_E_256 = F.interpolate(x_E, size=(256, 256), mode="bilinear", align_corners=False) # X_E
+            # x_E已不再使用
+            del x_E
+            
             delta = fx_e4e[9] - fy_e4e[9]
+            # fx_e4e和fy_e4e已不再使用
+            del fx_e4e, fy_e4e
+            torch.cuda.empty_cache()  # 释放一部分显存
 
             if d in self.config.train.disc_edits:
                 x_E_256 = torch.cat([x_E_256, x_resh], dim=0)
                 delta = torch.cat([delta, delta], dim=0)
             
-            
+            # 第二阶段-第二部分
+            # 对比的是method.py中的FSInverter
             w_x_E, x_E_predicted_feats = self.method.inverter.fs_backbone(x_E_256)
             w_x_E = w_x_E + self.method.latent_avg
             
@@ -520,15 +541,36 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 randomize_noise=False,
                 early_stop=64
             )
+            # w_x_E已不再使用
+            del w_x_E
+            
             x_E_w_feat = x_E_w_feats[9] 
+            # x_E_w_feats除了索引9外已不再使用
+            del x_E_w_feats
+            
             to_fuser = torch.cat([x_E_predicted_feats, x_E_w_feat], dim=1)
+            # x_E_predicted_feats和x_E_w_feat已不再使用
+            del x_E_predicted_feats, x_E_w_feat
+            
             x_E_fused_feat = self.method.inverter.fuser(to_fuser)
+            # to_fuser已不再使用
+            del to_fuser
         
-
+        # delta的使用在这里
         to_feature_editor = torch.cat([x_E_fused_feat, delta], dim=1)
-        x_E_edited_feat = self.method.encoder(to_feature_editor)
-        x_E_edited_feats = [None] * 9 + [x_E_edited_feat] + [None] * (17 - 9)
+        # x_E_fused_feat和delta已不再使用
+        del x_E_fused_feat, delta
         
+        x_E_edited_feat = self.method.encoder(to_feature_editor)
+        # to_feature_editor已不再使用
+        del to_feature_editor
+        
+        x_E_edited_feats = [None] * 9 + [x_E_edited_feat] + [None] * (17 - 9)
+        # x_E_edited_feat已包含在列表中，可以删除原引用
+        del x_E_edited_feat
+        
+        # 在最耗内存的decoder调用前释放一些内存
+        torch.cuda.empty_cache()
 
         y_hat_edit, _ = self.method.decoder(
             w_x_E_edited,
@@ -539,6 +581,10 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             randomize_noise=False
         )
         
+        # w_x_E_edited和x_E_edited_feats已不再使用
+        del w_x_E_edited, x_E_edited_feats
+        
+        # 损失计算
         bs = x_resh.size(0)
         output = {"encoder": {}, "to_disc": {}}
         use_adv_loss = (
@@ -564,13 +610,21 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             y_hat_edit = y_hat_edit[:bs]
 
         x = torch.cat([x, y_E], dim=0)
+        # y_E已不再使用
+        del y_E
+        
         y_hat = torch.cat([y_hat_inv, y_hat_edit])
+        # y_hat_inv和y_hat_edit已不再使用
+        del y_hat_inv, y_hat_edit
         
         y_hat = self.method.pool(y_hat)
         x = self.method.pool(x)
         output["encoder"]["x"] = x
         output["encoder"]["y_hat"] = y_hat
 
+        # 最后再清理一次内存
+        torch.cuda.empty_cache()
+        
         return output
 
     def _run_on_batch(self, inputs):
