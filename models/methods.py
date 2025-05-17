@@ -107,6 +107,10 @@ class FSEFull(nn.Module):
         return feat_editor  # trainable part
     
     def forward(self, x, return_latents=False, n_iter=1e5):
+        # 确保latent_avg在正确的设备上
+        if self.latent_avg.device != x.device:
+            self.latent_avg = self.latent_avg.to(x.device)
+            
         x = F.interpolate(x, size=(256, 256), mode="bilinear", align_corners=False)
 
         with torch.no_grad():
@@ -211,6 +215,10 @@ class FSEInverter(nn.Module):
         return inverter  # trainable part
     
     def forward(self, x, return_latents=False, n_iter=1e5):
+        # 确保latent_avg在正确的设备上
+        if self.latent_avg.device != x.device:
+            self.latent_avg = self.latent_avg.to(x.device)
+            
         x = F.interpolate(x, size=(256, 256), mode="bilinear", align_corners=False)
 
         w_recon, predicted_feat = self.encoder.fs_backbone(x)

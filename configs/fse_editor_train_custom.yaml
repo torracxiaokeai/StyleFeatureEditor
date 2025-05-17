@@ -41,3 +41,11 @@ optimizers:
 #        n_workers: 2
 #     l2:
 #        n_workers: 2
+
+dist:
+  enabled: true         # 是否启用分布式训练
+  port: 12345            # 通信端口
+  sync_bn: true          # 是否使用SyncBatchNorm
+  find_unused_parameters: true  # 是否找到未使用的参数
+  world_size: 4          # 使用的GPU数量
+  rank: 0                # 初始进程排名(会被自动设置)

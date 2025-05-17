@@ -218,7 +218,12 @@ class BlankWandbLogger:
 class TrainigLogger:
     def __init__(self, config):
         self.console_logger = ConsoleLogger("")
-        if config.exp.wandb == True:
+        self.config = config
+        
+        # 判断是否为主进程或非分布式环境
+        self.is_main_process = not hasattr(config, 'dist') or not config.dist.enabled or config.dist.rank == 0
+        
+        if config.exp.wandb == True and self.is_main_process:
             self.wandb_logger = WandbLogger(config)
         else:
             self.wandb_logger = BlankWandbLogger()
@@ -227,6 +232,10 @@ class TrainigLogger:
         self.val_step = config.train.val_step
 
     def log_train_time_left(self, iter_info, step):
+        # 只在主进程记录训练时间
+        if not self.is_main_process:
+            return
+            
         float_iter_time = iter_info["duration/iter_train"].mean
         float_val_time = iter_info["duration/iter_val"].mean
         time_left = str(
@@ -248,12 +257,20 @@ class TrainigLogger:
         print()
 
     def save_train_logs(self, iter_info, step):
+        # 只在主进程保存日志
+        if not self.is_main_process:
+            return
+            
         self.wandb_logger.log_epoch(iter_info, step)
         self.console_logger.log_epoch(iter_info, step)
 
         self.log_train_time_left(iter_info, step)
 
     def save_validation_logs(self, orig_pics, method_pics, captions, special_paths):
+        # 只在主进程保存验证日志
+        if not self.is_main_process:
+            return
+            
         log_pics = []
         for real_img, fake_img in zip(orig_pics, method_pics):
             concat_img = Image.new(

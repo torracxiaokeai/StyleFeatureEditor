@@ -84,6 +84,29 @@ class BaseTrainingRunner(BaseRunner):
         self._setup_optimizers()
         self._setup_loss()
 
+    def get_base_model(self):
+        """
+        获取未被DDP包装的原始模型。
+        在分布式训练中，模型会被DistributedDataParallel包装，
+        原始模型的属性会存储在.module属性中。
+        """
+        if self.config.dist.enabled and hasattr(self.method, 'module'):
+            return self.method.module
+        return self.method
+        
+    def get_model_component(self, component_name):
+        """
+        获取模型的组件/属性，自动处理DDP包装的情况。
+        
+        Args:
+            component_name: 要获取的组件名称，如'encoder'、'decoder'等
+            
+        Returns:
+            模型的对应组件
+        """
+        base_model = self.get_base_model()
+        return getattr(base_model, component_name)
+
     def _setup_logger(self):
         self.logger = TrainigLogger(self.config)
 
@@ -105,31 +128,74 @@ class BaseTrainingRunner(BaseRunner):
         self.special_paths = self.special_dataset.paths
 
     def _setup_dataloaders(self, batch_size):
+        # 设置分布式采样器
+        if self.config.dist.enabled:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(
+                self.train_dataset,
+                num_replicas=self.config.dist.world_size,
+                rank=self.config.dist.rank,
+                shuffle=True
+            )
+            test_sampler = torch.utils.data.distributed.DistributedSampler(
+                self.test_dataset,
+                num_replicas=self.config.dist.world_size,
+                rank=self.config.dist.rank,
+                shuffle=False
+            )
+            special_sampler = torch.utils.data.distributed.DistributedSampler(
+                self.special_dataset,
+                num_replicas=self.config.dist.world_size,
+                rank=self.config.dist.rank,
+                shuffle=False
+            )
+            
+            # 分布式环境下，每个进程的batch_size需要缩小
+            actual_batch_size = batch_size // self.config.dist.world_size
+            if self.config.dist.rank == 0:
+                print(f"Adjusting batch size from {batch_size} to {actual_batch_size} per GPU")
+        else:
+            train_sampler = None
+            test_sampler = None
+            special_sampler = None
+            actual_batch_size = batch_size
+        
+        # 修改为使用分布式采样器
         self.train_dataloader = InfiniteLoader(
             self.train_dataset,
-            batch_size=batch_size,
-            shuffle=True,
+            batch_size=actual_batch_size,
+            shuffle=(train_sampler is None),  # 如果使用采样器，不需要shuffle
+            sampler=train_sampler,
             num_workers=self.config.model.workers,
             drop_last=True,
             is_infinite=True
         )
+        
+        # 类似地修改test和special数据加载器
         self.test_dataloader = InfiniteLoader(
             self.test_dataset,
-            batch_size=batch_size,
+            batch_size=actual_batch_size,
             shuffle=False,
+            sampler=test_sampler,
             num_workers=self.config.model.workers,
             is_infinite=False
         )
+        
         self.special_dataloader = InfiniteLoader(
             self.special_dataset,
-            batch_size=batch_size,
+            batch_size=actual_batch_size,
             shuffle=False,
+            sampler=special_sampler,
             num_workers=self.config.model.workers,
             is_infinite=False
         )
+        
+        # 保存采样器引用，以便在epoch开始时设置
+        self.train_sampler = train_sampler
 
     def _setup_optimizers(self):
-        params = list(self.method.encoder.parameters())
+        # 获取编码器参数，处理DDP情况
+        encoder = self.get_model_component('encoder')
+        params = list(encoder.parameters())
 
         optimizer_args = dict(
             self.config.optimizers[self.config.train.encoder_optimizer]
@@ -147,7 +213,9 @@ class BaseTrainingRunner(BaseRunner):
                 print('WARNING, continuing training without loading encoder optimizer state!')
 
         if self.config.train.train_dis:
-            params = list(self.method.discriminator.parameters())
+            # 获取判别器参数，处理DDP情况
+            discriminator = self.get_model_component('discriminator')
+            params = list(discriminator.parameters())
             optimizer_args = dict(
                 self.config.optimizers[self.config.train.disc_optimizer]
             )
@@ -178,32 +246,74 @@ class BaseTrainingRunner(BaseRunner):
         exp_dir = self.config.exp.exp_dir
         exp_dir_name = "{}_{}".format(self.config.exp.name, str(num).zfill(3))
 
-        exp_path = base_root / exp_dir / exp_dir_name
-        while True:
-            if exp_path.exists():
-                num += 1
-                exp_dir_name = "{}_{}".format(self.config.exp.name, str(num).zfill(3))
-                print(exp_path, "already exists: move to", exp_dir_name)
-            else:
-                break
+        # 只有主进程或非分布式环境创建目录
+        is_main_process = not self.config.dist.enabled or self.config.dist.rank == 0
+        
+        if is_main_process:
             exp_path = base_root / exp_dir / exp_dir_name
-        self.experiment_dir = str(exp_path)
-        os.makedirs(self.experiment_dir)
-        print("Experiment directory: {self.experiment_dir}")
+            while True:
+                if exp_path.exists():
+                    num += 1
+                    exp_dir_name = "{}_{}".format(self.config.exp.name, str(num).zfill(3))
+                    print(exp_path, "already exists: move to", exp_dir_name)
+                else:
+                    break
+                exp_path = base_root / exp_dir / exp_dir_name
+                
+            self.experiment_dir = str(exp_path)
+            os.makedirs(self.experiment_dir)
+            print(f"Experiment directory: {self.experiment_dir}")
 
-        with open(os.path.join(self.experiment_dir, "config.yaml"), "w") as f:
-            omegaconf.OmegaConf.save(config=self.config, f=f.name)
+            with open(os.path.join(self.experiment_dir, "config.yaml"), "w") as f:
+                omegaconf.OmegaConf.save(config=self.config, f=f.name)
 
-        with open(os.path.join(self.experiment_dir, "run_command.sh"), "w") as f:
-            f.write(" ".join(sys.argv))
-            f.write("\n")
+            with open(os.path.join(self.experiment_dir, "run_command.sh"), "w") as f:
+                f.write(" ".join(sys.argv))
+                f.write("\n")
 
-        self.metrics_dir = os.path.join(self.experiment_dir, "metrics")
-        os.mkdir(self.metrics_dir)
-        self.inference_results_dir = os.path.join(
-            self.experiment_dir, "inference_results"
-        )
-        os.mkdir(self.inference_results_dir)
+            self.metrics_dir = os.path.join(self.experiment_dir, "metrics")
+            os.mkdir(self.metrics_dir)
+            self.inference_results_dir = os.path.join(
+                self.experiment_dir, "inference_results"
+            )
+            os.mkdir(self.inference_results_dir)
+        
+        # 在分布式环境中同步实验目录路径
+        if self.config.dist.enabled:
+            # 创建一个临时tensor存储experiment_dir的长度
+            if is_main_process:
+                dir_path = self.experiment_dir
+                dir_length = torch.tensor(len(dir_path), dtype=torch.int64, device=self.device)
+            else:
+                dir_length = torch.tensor(0, dtype=torch.int64, device=self.device)
+                
+            # 广播目录长度
+            torch.distributed.broadcast(dir_length, src=0)
+            
+            # 非主进程接收目录路径
+            if not is_main_process:
+                dir_path = ""
+            
+            # 将目录路径转换为张量进行广播
+            if is_main_process:
+                dir_tensor = torch.tensor([ord(c) for c in dir_path], dtype=torch.int64, device=self.device)
+            else:
+                dir_tensor = torch.zeros(dir_length.item(), dtype=torch.int64, device=self.device)
+            
+            # 广播目录路径
+            torch.distributed.broadcast(dir_tensor, src=0)
+            
+            # 非主进程解码目录路径
+            if not is_main_process:
+                dir_path = ''.join([chr(i) for i in dir_tensor.cpu().numpy()])
+                self.experiment_dir = dir_path
+                self.metrics_dir = os.path.join(self.experiment_dir, "metrics")
+                self.inference_results_dir = os.path.join(
+                    self.experiment_dir, "inference_results"
+                )
+            
+            # 确保所有进程同步
+            torch.distributed.barrier()
 
     def _setup_metrics(self):
         metrics_names = self.config.train.val_metrics
@@ -227,16 +337,40 @@ class BaseTrainingRunner(BaseRunner):
         self.to_train()
 
         for self.global_step in range(self.start_step, self.config.train.steps + 1):
+            # 在每个epoch设置采样器的epoch
+            if self.config.dist.enabled and self.train_sampler is not None:
+                self.train_sampler.set_epoch(self.global_step)
+            
             with Timer(iter_info, "iter_train"):
                 loss_dict = self.train_step()
+                
+                # 如果是分布式训练，同步所有进程的损失
+                if self.config.dist.enabled:
+                    # 获取进程数量作为平均因子
+                    world_size = self.config.dist.world_size
+                    # 遍历损失字典的每个值，进行同步
+                    for k, v in loss_dict.items():
+                        if isinstance(v, float):
+                            tensor = torch.tensor(v, device=self.device)
+                            torch.distributed.all_reduce(tensor, op=torch.distributed.ReduceOp.SUM)
+                            loss_dict[k] = tensor.item() / world_size
+                            
                 iter_info.update({f"iter_train/{k}": v for k, v in loss_dict.items()})
 
-            if self.global_step % self.config.train.val_step == 0 :
+            # 验证和日志记录
+            if self.global_step % self.config.train.val_step == 0:
                 with Timer(iter_info, "iter_val"):
+                    # 所有进程需要参与验证，但只有主进程记录结果
                     val_loss_dict = self.validate()
-                    iter_info.update({f"iter_val/{k}": v for k, v in val_loss_dict.items()})
-
+                    
+                    # 只在主进程更新验证指标
+                    if not self.config.dist.enabled or self.config.dist.rank == 0:
+                        iter_info.update({f"iter_val/{k}": v for k, v in val_loss_dict.items()})
+                    
+                    # 执行特殊验证并获取结果
                     orig_pics, method_pics, captions = self.inference_special()
+                    
+                    # TrainingLogger内部会处理是否为主进程
                     self.logger.save_validation_logs(
                         orig_pics,
                         method_pics, 
@@ -244,16 +378,23 @@ class BaseTrainingRunner(BaseRunner):
                         special_paths=self.special_paths
                     )
 
+            # 记录和保存检查点 - TrainingLogger和save_checkpoint内部会处理是否为主进程
             if self.global_step % self.config.train.log_step == 0:
                 self.logger.save_train_logs(iter_info, self.global_step)
+                # 确保在分布式环境中同步所有进程
+                if self.config.dist.enabled:
+                    torch.distributed.barrier()
                 iter_info.clear()
 
             if self.global_step % self.config.train.checkpoint_step == 0:
                 self.save_checkpoint()
+                # 确保在分布式环境中同步所有进程
+                if self.config.dist.enabled:
+                    torch.distributed.barrier()
 
     def train_step(self):
         # 在每次step开始时打印当前的步骤信息
-        if self.global_step % 2 == 0:  # 每50步打印一次，避免输出过多
+        if self.global_step % 2 == 0 and (not self.config.dist.enabled or self.config.dist.rank == 0):  # 每2步打印一次，避免输出过多，并且只在主进程打印
             progress = self.global_step / self.config.train.steps * 100
             print(f"Step {self.global_step}/{self.config.train.steps} ({progress:.2f}%)")
         
@@ -272,17 +413,20 @@ class BaseTrainingRunner(BaseRunner):
             self.config.train.train_dis
             and self.global_step >= self.config.train.dis_train_start_step
         ):
-            if self.global_step == self.config.train.dis_train_start_step:
+            if self.global_step == self.config.train.dis_train_start_step and (not self.config.dist.enabled or self.config.dist.rank == 0):
                 print("Start training with discriminator")
             if self.train_dataloader.batch_size != self.config.model.batch_size:
-                print(f"Changing batch size from {self.train_dataloader.batch_size} to {self.config.model.batch_size}")
+                if not self.config.dist.enabled or self.config.dist.rank == 0:
+                    print(f"Changing batch size from {self.train_dataloader.batch_size} to {self.config.model.batch_size}")
                 self.setup_dataloaders(self.config.model.batch_size)
 
-            toogle_grad(self.method.discriminator, True)
-            self.method.discriminator.train()
+            # 获取判别器并训练，处理DDP情况
+            discriminator = self.get_model_component('discriminator')
+            toogle_grad(discriminator, True)
+            discriminator.train()
 
             disc_loss, disc_losses_dict = self.loss_builder.disc_loss(
-                self.method.discriminator, 
+                discriminator, 
                 output["to_disc"]
                 )
             loss_dict.update(disc_losses_dict)
@@ -291,14 +435,20 @@ class BaseTrainingRunner(BaseRunner):
             disc_loss.backward()
             self.disc_optimizer.step()
 
-            toogle_grad(self.method.discriminator, False)
-            self.method.discriminator.eval()
+            toogle_grad(discriminator, False)
+            discriminator.eval()
 
-        self.method.latent_avg = self.method.latent_avg.detach()
+        # 确保latent_avg不参与反向传播
+        base_model = self.get_base_model()
+        base_model.latent_avg = base_model.latent_avg.detach()
 
         return loss_dict
 
     def save_checkpoint(self):
+        # 只有主进程保存检查点
+        if self.config.dist.enabled and self.config.dist.rank != 0:
+            return
+            
         save_name = f"iteration_{self.global_step}.pt"
         checkpoint_path = os.path.join(self.experiment_dir, save_name)
         save_dict = self.get_save_dict()
@@ -315,10 +465,13 @@ class BaseTrainingRunner(BaseRunner):
             json.dump(save_options, f)
 
     def get_save_dict(self):
+        # 获取原始模型以正确保存latent_avg
+        base_model = self.get_base_model()
+        
         save_dict = {
             "state_dict": self.method.state_dict(),
             "encoder_opt": self.encoder_optimizer.state_dict(),
-            "latent_avg": self.method.latent_avg
+            "latent_avg": base_model.latent_avg
         }
 
         if self.config.train.train_dis:
@@ -327,8 +480,15 @@ class BaseTrainingRunner(BaseRunner):
 
     @torch.inference_mode()
     def inference_special(self):
-        print("Runing inversion for special")
+        # 只在主进程打印信息
+        if not self.config.dist.enabled or self.config.dist.rank == 0:
+            print("Running inversion for special")
         self.validate(special=True)
+        
+        # 在分布式模式下，只有主进程处理度量计算和结果收集
+        if self.config.dist.enabled and self.config.dist.rank != 0:
+            # 非主进程返回空结果
+            return [], [], {}
 
         captions = defaultdict(str)
         for metric in self.metrics:
@@ -343,20 +503,34 @@ class BaseTrainingRunner(BaseRunner):
             metric_data, _, _ = metric(
                 None, None, out_path=None, from_data=from_data_arg
             )
+            
+            # 确保metric_data有所有路径的键
             for path in self.special_paths:
-                metric_value = metric_data[os.path.basename(path)]
-                captions[path] += f"{metric.get_name()}: {metric_value:.3}\n"
+                basename = os.path.basename(path)
+                if basename in metric_data:
+                    metric_value = metric_data[basename]
+                    captions[path] += f"{metric.get_name()}: {metric_value:.3}\n"
+                else:
+                    # 如果找不到这个路径，添加一个占位符
+                    captions[path] += f"{metric.get_name()}: N/A\n"
 
         return self.val_pics_orig, self.val_pics_res, captions
 
     @torch.inference_mode()
     def validate(self, special=False):
-        if not special:
+        if not special and (not self.config.dist.enabled or self.config.dist.rank == 0):
             print("Start validating")
 
         self.to_eval()
-        self.val_pics_res = []
-        self.val_pics_orig = []
+        
+        # 在主进程中初始化结果列表
+        if not self.config.dist.enabled or self.config.dist.rank == 0:
+            self.val_pics_res = []
+            self.val_pics_orig = []
+        else:
+            # 非主进程不需要收集图像，只参与计算
+            self.val_pics_res = []  # 使用空列表而不是None，避免属性不存在的错误
+            self.val_pics_orig = []
 
         if not special:
             dataloader = self.test_dataloader
@@ -365,34 +539,64 @@ class BaseTrainingRunner(BaseRunner):
             dataloader = self.special_dataloader
             paths = self.special_paths
 
+        # 记录本进程处理的样本索引，用于调试
+        batch_indices = []
+        
         global_i = 0
-        for input_batch in tqdm(dataloader):
+        for input_batch in tqdm(dataloader, disable=self.config.dist.enabled and self.config.dist.rank != 0):
             input_batch = input_batch.to(self.device).float()
             result_batch = self._run_on_batch(input_batch)
+            
+            # 记录当前批次的索引
+            batch_size = input_batch.shape[0]
+            indices = list(range(global_i, global_i + batch_size))
+            batch_indices.extend(indices)
+            global_i += batch_size
                 
-            for i in range(result_batch.shape[0]):
-                result = tensor2im(result_batch[i])
-                img = Image.fromarray(np.array(result)).convert("RGB")
+            # 只在主进程收集结果
+            if not self.config.dist.enabled or self.config.dist.rank == 0:
+                for i in range(result_batch.shape[0]):
+                    idx = global_i - batch_size + i  # 计算当前样本的全局索引
+                    
+                    result = tensor2im(result_batch[i])
+                    img = Image.fromarray(np.array(result)).convert("RGB")
 
-                memory_tmp = BytesIO()
-                img.save(memory_tmp, format="jpeg")
-                img = Image.open(memory_tmp).convert("RGB")
-                memory_tmp.close()
+                    memory_tmp = BytesIO()
+                    img.save(memory_tmp, format="jpeg")
+                    img = Image.open(memory_tmp).convert("RGB")
+                    memory_tmp.close()
 
-                self.val_pics_res.append(img)
-                self.val_pics_orig.append(
-                    Image.open(paths[global_i]).convert("RGB")
-                )
+                    self.val_pics_res.append(img)
+                    
+                    # 确保索引在路径范围内
+                    if idx < len(paths):
+                        self.val_pics_orig.append(
+                            Image.open(paths[idx]).convert("RGB")
+                        )
+                    else:
+                        print(f"Warning: index {idx} out of range for paths (length {len(paths)})")
 
-                global_i += 1
+        # 在分布式设置中，我们需要确保所有进程完成验证
+        if self.config.dist.enabled:
+            if self.config.dist.rank == 0:
+                print(f"Rank 0 processed {len(batch_indices)} samples with indices: {batch_indices[:10]}...")
+            torch.distributed.barrier()
 
         metrics_dict = {}
-        if not special:
+        if not special and (not self.config.dist.enabled or self.config.dist.rank == 0):
+            # 确保收集到的图像数量正确
+            if len(self.val_pics_res) != len(self.val_pics_orig):
+                print(f"Warning: Mismatch between val_pics_res ({len(self.val_pics_res)}) and val_pics_orig ({len(self.val_pics_orig)})")
+                # 取二者中较小的数量
+                min_count = min(len(self.val_pics_res), len(self.val_pics_orig))
+                self.val_pics_res = self.val_pics_res[:min_count]
+                self.val_pics_orig = self.val_pics_orig[:min_count]
+                
             for metric in self.metrics:
                 from_data_arg = {
                     "fake_data": self.val_pics_res,
                     "inp_data": self.val_pics_orig,
-                    "paths": paths,
+                    "paths": paths[:len(self.val_pics_res)],  # 确保路径数量匹配
                 }
                 _, metric_mean, _ = metric(
                     None, None, out_path=None, from_data=from_data_arg
@@ -410,17 +614,49 @@ class BaseTrainingRunner(BaseRunner):
     def forward(self, x):
         raise NotImplementedError()
 
+    def _setup_device(self):
+        # 原有代码
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+
+    def _setup_method(self):
+        # 先初始化模型
+        method_name = self.config.model.method
+        self.method = methods_registry[method_name](
+            checkpoint_path=self.config.model.checkpoint_path,
+            **self.config.methods_args[method_name],
+        ).to(self.device)
+        
+        # 如果启用分布式训练，进行DDP包装
+        if self.config.dist.enabled:
+            # 转换为SyncBatchNorm（如果配置中启用）
+            if self.config.dist.sync_bn:
+                self.method = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.method)
+            
+            # 包装模型为DDP
+            self.method = torch.nn.parallel.DistributedDataParallel(
+                self.method,
+                device_ids=[self.config.dist.rank],
+                output_device=self.config.dist.rank,
+                find_unused_parameters=self.config.dist.find_unused_parameters
+            )
+
 
 @training_runners.add_to_registry(name="fse_inverter")
 class FSEInverterTrainingRunner(BaseTrainingRunner):
     def forward(self, x):
+        # 获取原始模型，处理DDP包装情况
+        base_model = self.get_base_model()
+        
         y_hat_inv, w_inv, fused_feat, w_feat = self.method(
             x,
             return_latents=True,
             n_iter=self.global_step
         )
                                                 
-        y_hat_inv_w, _ = self.method.decoder(
+        y_hat_inv_w, _ = base_model.decoder(
             [w_inv],
             input_is_latent=True,
             is_stylespace=False,
@@ -436,13 +672,13 @@ class FSEInverterTrainingRunner(BaseTrainingRunner):
         )
         output["encoder"]["use_adv_loss"] = use_adv_loss
         if use_adv_loss:
-            output["encoder"]["fake_preds"] = self.method.discriminator(y_hat, None)
+            output["encoder"]["fake_preds"] = base_model.discriminator(y_hat, None)
             output["to_disc"]["y_hat"] = y_hat
             output["to_disc"]["x"] = x
             output["to_disc"]["step"] = self.global_step
         
-        y_hat = self.method.pool(y_hat)
-        x = self.method.pool(x)
+        y_hat = base_model.pool(y_hat)
+        x = base_model.pool(x)
         x = torch.cat([x, x], dim=0)
         
         output["encoder"]["x"] = x
@@ -460,6 +696,9 @@ class FSEInverterTrainingRunner(BaseTrainingRunner):
 @training_runners.add_to_registry(name="fse_editor")
 class FSEEditorTrainingRunner(BaseTrainingRunner):
     def forward(self, x):
+        # 获取原始模型，处理DDP包装情况
+        base_model = self.get_base_model()
+        
         # get inversion batch
         y_hat_inv, w, fused_feat, w_feat = self.method(x, return_latents=True)
         # w变量未被使用，可以立即删除
@@ -472,9 +711,10 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             
             x_resh = F.interpolate(x, size=(256, 256), mode="bilinear", align_corners=False)
 
-            w_e4e = self.method.e4e_encoder(x_resh)
-            w_e4e = w_e4e + self.method.latent_avg
-            x_E, fx_e4e = self.method.decoder(
+            # 使用e4e编码器生成潜在编码
+            w_e4e = base_model.e4e_encoder(x_resh)
+            w_e4e = w_e4e + base_model.latent_avg
+            x_E, fx_e4e = base_model.decoder(
                 [w_e4e],
                 input_is_latent=True,
                 randomize_noise=False,
@@ -490,7 +730,7 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             
             if isinstance(edited_w_e4e, tuple):
                 # stylespace case
-                y_E, fy_e4e = self.method.decoder(
+                y_E, fy_e4e = base_model.decoder(
                     edited_w_e4e, 
                     is_stylespace=True, 
                     input_is_latent=True,
@@ -499,7 +739,7 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 )
             else:
                 edited_w_e4e = torch.cat(edited_w_e4e, dim=0)
-                y_E, fy_e4e = self.method.decoder(
+                y_E, fy_e4e = base_model.decoder(
                     [edited_w_e4e], 
                     is_stylespace=False,
                     input_is_latent=True,
@@ -524,16 +764,17 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 delta = torch.cat([delta, delta], dim=0)
             
             # 第二阶段-第二部分
-            # 对比的是method.py中的FSInverter
-            w_x_E, x_E_predicted_feats = self.method.inverter.fs_backbone(x_E_256)
-            w_x_E = w_x_E + self.method.latent_avg
+            # 使用特征提取backbone
+            w_x_E, x_E_predicted_feats = base_model.inverter.fs_backbone(x_E_256)
+            w_x_E = w_x_E + base_model.latent_avg
             
             w_x_E_edited = self.get_edited_latent(w_x_E, d, [strenght])
             is_stylespace = isinstance(w_x_E_edited, tuple)
             if not is_stylespace:
                 w_x_E_edited = [torch.cat(w_x_E_edited, dim=0)]
             
-            _, x_E_w_feats = self.method.decoder(
+            # 使用解码器获取特征
+            _, x_E_w_feats = base_model.decoder(
                 [w_x_E],
                 input_is_latent=True,
                 return_features=True,
@@ -552,7 +793,8 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             # x_E_predicted_feats和x_E_w_feat已不再使用
             del x_E_predicted_feats, x_E_w_feat
             
-            x_E_fused_feat = self.method.inverter.fuser(to_fuser)
+            # 融合特征
+            x_E_fused_feat = base_model.inverter.fuser(to_fuser)
             # to_fuser已不再使用
             del to_fuser
         
@@ -561,7 +803,8 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
         # x_E_fused_feat和delta已不再使用
         del x_E_fused_feat, delta
         
-        x_E_edited_feat = self.method.encoder(to_feature_editor)
+        # 使用编码器生成编辑特征
+        x_E_edited_feat = base_model.encoder(to_feature_editor)
         # to_feature_editor已不再使用
         del to_feature_editor
         
@@ -572,7 +815,8 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
         # 在最耗内存的decoder调用前释放一些内存
         torch.cuda.empty_cache()
 
-        y_hat_edit, _ = self.method.decoder(
+        # 生成最终的编辑图像
+        y_hat_edit, _ = base_model.decoder(
             w_x_E_edited,
             input_is_latent=True,
             new_features=x_E_edited_feats,
@@ -595,12 +839,12 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
         if use_adv_loss:
             if x_E_256.size(0) > x_resh.size(0):
                 assert y_hat_edit.size(0) == bs * 2
-                output["encoder"]["fake_preds"] = self.method.discriminator(
+                output["encoder"]["fake_preds"] = base_model.discriminator(
                     torch.cat([y_hat_inv, y_hat_edit[bs:]], dim=0), 
                     None
                 )
             else:
-                output["encoder"]["fake_preds"] = self.method.discriminator(y_hat_inv, None)
+                output["encoder"]["fake_preds"] = base_model.discriminator(y_hat_inv, None)
             output["to_disc"]["y_hat"] = y_hat_inv
             output["to_disc"]["x"] = x
             output["to_disc"]["step"] = self.global_step
@@ -617,8 +861,9 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
         # y_hat_inv和y_hat_edit已不再使用
         del y_hat_inv, y_hat_edit
         
-        y_hat = self.method.pool(y_hat)
-        x = self.method.pool(x)
+        # 下采样输出图像
+        y_hat = base_model.pool(y_hat)
+        x = base_model.pool(x)
         output["encoder"]["x"] = x
         output["encoder"]["y_hat"] = y_hat
 

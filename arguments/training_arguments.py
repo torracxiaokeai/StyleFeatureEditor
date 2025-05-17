@@ -8,6 +8,7 @@ from omegaconf import OmegaConf, MISSING
 from utils.class_registry import ClassRegistry
 from models.methods import methods_registry
 from metrics.metrics import metrics_registry
+import argparse
 
 
 args = ClassRegistry()
@@ -83,6 +84,17 @@ class EncoderLossesArgs:
     id_vit: float = 0.0
 
 
+@args.add_to_registry("dist")
+@dataclass
+class DistributedArgs:
+    enabled: bool = False
+    port: int = 12345
+    sync_bn: bool = True
+    find_unused_parameters: bool = True
+    world_size: int = 4  # -1表示自动检测
+    rank: int = 0
+
+
 MethodsArgs = methods_registry.make_dataclass_from_args("MethodsArgs")
 args.add_to_registry("methods_args")(MethodsArgs)
 
@@ -99,21 +111,40 @@ args.add_to_registry("metrics")(MetricsArgs)
 Args = args.make_dataclass_from_classes("Args")
 
 
+def get_dist_arguments():
+    return {
+        "enabled": False,
+        "port": 12345,
+        "sync_bn": True,
+        "find_unused_parameters": True,
+        "world_size": 4,  # 默认设置为4个GPU
+        "rank": 0
+    }
+
 def load_config():
+    # 创建默认配置
     config = OmegaConf.structured(Args)
 
+    # 解析命令行参数
     conf_cli = OmegaConf.from_cli()
     config.exp.config = conf_cli.exp.config
     config.exp.config_dir = conf_cli.exp.config_dir
 
+    # 加载配置文件
     config_path = os.path.join(config.exp.config_dir, config.exp.config)
     conf_file = OmegaConf.load(config_path)
     config = OmegaConf.merge(config, conf_file)
 
+    # 清理方法参数
     for method in list(config.methods_args.keys()):
         if method != config.model.method:
             config.methods_args.__delattr__(method)
 
+    # 确保分布式训练配置存在
+    if not hasattr(config, 'dist'):
+        config.dist = OmegaConf.create(get_dist_arguments())
+
+    # 合并命令行参数(最高优先级)
     config = OmegaConf.merge(config, conf_cli)
 
     return config

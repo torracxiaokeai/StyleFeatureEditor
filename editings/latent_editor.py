@@ -284,7 +284,7 @@ class LatentEditor:
         w_0 = w.cpu().numpy().reshape(bs, -1)
         boundary = boundary.reshape(1, -1).repeat(bs, 0)
 
-        edits = [torch.tensor(w_0 + factor * boundary).view(bs, -1, 512).to(device) for factor in factors]
+        edits = [torch.tensor(w_0 + factor * boundary, device=device).view(bs, -1, 512) for factor in factors]
 
         return edits
 

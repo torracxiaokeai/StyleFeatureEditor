@@ -24,9 +24,22 @@ class BaseRunner:
         self._setup_latent_editor()
         self._setup_method()
 
+    def get_base_model(self):
+        """
+        获取未被DDP包装的原始模型。
+        在分布式训练中，模型会被DistributedDataParallel包装，
+        原始模型的属性会存储在.module属性中。
+        """
+        if hasattr(self.config, 'dist') and self.config.dist.enabled and hasattr(self.method, 'module'):
+            return self.method.module
+        return self.method
+
     def get_edited_latent(self, original_latent, editing_name, editing_degrees, original_image=None):
+        # 获取原始模型，以访问其decoder属性
+        base_model = self.get_base_model()
+        
         if editing_name in self.latent_editor.stylespace_directions:
-            stylespace_latent = get_stylespace_from_w(original_latent, self.method.decoder)
+            stylespace_latent = get_stylespace_from_w(original_latent, base_model.decoder)
             edited_latents = (
                 self.latent_editor.get_stylespace_edits(
                     stylespace_latent, editing_degrees, editing_name
@@ -53,14 +66,14 @@ class BaseRunner:
                     original_latent, editing_degrees, editing_name
                 )
         elif editing_name.startswith("styleclip_global_"):
-            stylespace_latent = get_stylespace_from_w(original_latent, self.method.decoder)
+            stylespace_latent = get_stylespace_from_w(original_latent, base_model.decoder)
             edited_latents = (
                 self.latent_editor.get_styleclip_global_edits(
                     stylespace_latent, editing_degrees, editing_name.replace("styleclip_global_", "")
                 ))
         elif editing_name.startswith("deltaedit_"):
             assert original_image is not None
-            stylespace_latent = get_stylespace_from_w(original_latent, self.method.decoder)
+            stylespace_latent = get_stylespace_from_w(original_latent, base_model.decoder)
             edited_latents = (
                 self.latent_editor.get_deltaedit_edits(
                     stylespace_latent, editing_degrees, editing_name.replace("deltaedit_", ""), original_image
