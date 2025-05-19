@@ -1,0 +1,29 @@
+inference:
+  inference_runner: vivface_inference_runner
+  # 表情迁移和跨身份表情迁移测试
+  editings_data: {
+    "expression_transfer": ["path/to/target_expression.jpg"],  # 从其他图像获取表情
+    "neutral_expression": [1],                                 # 生成中性表情
+    "cross_id_transfer": ["path/to/other_identity.jpg"]        # 跨身份表情迁移
+  }
+
+model:
+  method: vivface_fse
+  device: "0"
+  batch_size: 1
+  workers: 1
+  checkpoint_path: experiments/vivface_stage1_000/iteration_500000.pt  # 训练好的模型路径
+
+# 数据路径配置
+data:
+  transform: vivface_transform
+  input_test_dir: datasets/ffhq/test       # 测试数据集
+  special_dir: datasets/ffhq/special       # 特殊测试图像
+
+# 方法参数
+methods_args:
+  vivface_fse: {}
+
+# 推理结果保存路径
+inference:
+  save_dir: edit_result/vivface

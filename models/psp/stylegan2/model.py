@@ -229,15 +229,25 @@ class ModulatedConv2d(nn.Module):
             f"upsample={self.upsample}, downsample={self.downsample})"
         )
 
-    def forward(self, input, style, is_stylespace=False):
+    def forward(self, input, style, is_stylespace=False, direct_ss_style=None):
+        """
+        Args:
+            input: 输入特征
+            style: W空间或StyleSpace空间的样式向量
+            is_stylespace: 是否使用StyleSpace模式（StyleFeatureEditor原模式）
+            direct_ss_style: ViVFace模式下的表情控制样式，形状为[batch, 1, channel, 1, 1]
+        """
         batch, in_channel, height, width = input.shape
-        
-        weight = self.weight
 
         if not is_stylespace:
             style = self.modulation(style)
+            
         style = style.view(batch, 1, in_channel, 1, 1)
-        weight = self.scale * weight * style
+        
+        if direct_ss_style is not None:
+            style = style + direct_ss_style
+            
+        weight = self.scale * self.weight * style
 
         if self.demodulate:
             demod = torch.rsqrt(weight.pow(2).sum([2, 3, 4]) + 1e-8)
@@ -333,10 +343,17 @@ class StyledConv(nn.Module):
         # self.activate = ScaledLeakyReLU(0.2)
         self.activate = FusedLeakyReLU(out_channel)
 
-    def forward(self, input, style, noise=None, is_stylespace=False):
-        out = self.conv(input, style, is_stylespace)
+    def forward(self, input, style, noise=None, is_stylespace=False, direct_ss_style=None):
+        """
+        Args:
+            input: 输入特征
+            style: W空间或StyleSpace空间的样式向量
+            noise: 注入的噪声
+            is_stylespace: 是否使用StyleSpace模式（StyleFeatureEditor原模式）
+            direct_ss_style: ViVFace模式下的表情控制样式
+        """
+        out = self.conv(input, style, is_stylespace, direct_ss_style=direct_ss_style)
         out = self.noise(out, noise=noise)
-        # out = out + self.bias
         out = self.activate(out)
 
         return out
@@ -352,8 +369,16 @@ class ToRGB(nn.Module):
         self.conv = ModulatedConv2d(in_channel, 3, 1, style_dim, demodulate=False)
         self.bias = nn.Parameter(torch.zeros(1, 3, 1, 1))
 
-    def forward(self, input, style, skip=None, is_stylespace=False):
-        out = self.conv(input, style, is_stylespace)
+    def forward(self, input, style, skip=None, is_stylespace=False, direct_ss_style=None):
+        """
+        Args:
+            input: 输入特征
+            style: W空间或StyleSpace空间的样式向量
+            skip: 来自上一层的skip连接
+            is_stylespace: 是否使用StyleSpace模式（StyleFeatureEditor原模式）
+            direct_ss_style: ViVFace模式下的表情控制样式
+        """
+        out = self.conv(input, style, is_stylespace, direct_ss_style=direct_ss_style)
         out = out + self.bias
 
         if skip is not None:
@@ -377,8 +402,8 @@ class Generator(nn.Module):
         super().__init__()
 
         self.size = size
-
         self.style_dim = style_dim
+
 
         layers = [PixelNorm()]
 
@@ -487,10 +512,27 @@ class Generator(nn.Module):
         new_features=None,
         feature_scale=1.0,
         early_stop=None,
+        ss_latent=None,
     ):
-
+        """
+        Forward pass of the generator with support for dual path latent code (w_latent & ss_latent).
+        
+        Args:
+            styles: Style latent code (w_latent) that controls identity features.
+            ss_latent: Style-specific latent code that controls expression/style features.
+                       Expected as tensor of shape [batch_size, num_layers, style_dim].
+                       Used only in ViVFace mode. When provided, it will be used directly.
+            is_stylespace: If True, uses StyleSpace mode (StyleFeatureEditor's original mode).
+                          This mode is mutually exclusive with ss_latent.
+            
+        Returns:
+            image: Generated image
+            latents: Dictionary containing w_latent and ss_latent if return_latents=True
+        """
+        # StyleFeatureEditor模式的StyleSpace处理
         if is_stylespace:
             styles, to_rgb_stylespace = styles
+            
         if not input_is_latent and not is_stylespace:
             styles = [self.style(s) for s in styles]
 
@@ -538,34 +580,105 @@ class Generator(nn.Module):
         out = self.input(latent)
         outs.append(out)
 
-        out = self.conv1(out, styles[0].float() if is_stylespace else latent[:, 0], noise=noise[0], is_stylespace=is_stylespace)
-        outs.append(out)
-
-        skip = self.to_rgb1(out, to_rgb_stylespace[0].float() if is_stylespace else latent[:, 1], is_stylespace=is_stylespace)
+        # 检测是否使用ViVFace模式（存在ss_latent）
+        is_vivface_mode = ss_latent is not None
+        batch_size = latent.shape[0]
         
-
-        i = 1
-        for conv1, conv2, noise1, noise2, to_rgb in zip(
-            self.convs[::2], self.convs[1::2], noise[1::2], noise[2::2], self.to_rgbs
-        ):
-            out = insert_feature(out, i)
-            out = conv1(out, styles[i].float() if is_stylespace else latent[:, i], noise=noise1, is_stylespace=is_stylespace)
-            outs.append(out)
-
-            out = insert_feature(out, i + 1)
-            out = conv2(out, styles[i + 1].float() if is_stylespace else latent[:, i + 1], noise=noise2, is_stylespace=is_stylespace)
-            outs.append(out)
-
-            skip = to_rgb(out, to_rgb_stylespace[i // 2 + 1].float() if is_stylespace else latent[:, i + 2], skip, is_stylespace=is_stylespace)
+        # ViVFace模式：设置每层的direct_ss_style
+        if is_vivface_mode:
+            # 第一层
+            direct_ss_style_0 = ss_latent[:, 0].reshape(batch_size, 1, -1, 1, 1) if ss_latent.size(1) > 0 else None
+            direct_ss_style_1 = ss_latent[:, 1].reshape(batch_size, 1, -1, 1, 1) if ss_latent.size(1) > 1 else None
             
-            if early_stop is not None and skip.size(-1) == early_stop:
-                break
+            out = self.conv1(
+                out, 
+                latent[:, 0], 
+                noise=noise[0],
+                direct_ss_style=direct_ss_style_0
+            )
+            outs.append(out)
 
-            i += 2
+            skip = self.to_rgb1(
+                out, 
+                latent[:, 1], 
+                direct_ss_style=direct_ss_style_1
+            )
+            
+            # 后续层
+            i = 1
+            for conv1, conv2, noise1, noise2, to_rgb in zip(
+                self.convs[::2], self.convs[1::2], noise[1::2], noise[2::2], self.to_rgbs
+            ):
+                direct_ss_style_i = ss_latent[:, i].reshape(batch_size, 1, -1, 1, 1) if i < ss_latent.size(1) else None
+                direct_ss_style_i1 = ss_latent[:, i+1].reshape(batch_size, 1, -1, 1, 1) if i+1 < ss_latent.size(1) else None
+                direct_ss_style_i2 = ss_latent[:, i+2].reshape(batch_size, 1, -1, 1, 1) if i+2 < ss_latent.size(1) else None
+                    
+                out = insert_feature(out, i)
+                out = conv1(
+                    out, 
+                    latent[:, i], 
+                    noise=noise1,
+                    direct_ss_style=direct_ss_style_i
+                )
+                outs.append(out)
+
+                out = insert_feature(out, i + 1)
+                out = conv2(
+                    out, 
+                    latent[:, i + 1], 
+                    noise=noise2,
+                    direct_ss_style=direct_ss_style_i1
+                )
+                outs.append(out)
+
+                skip = to_rgb(
+                    out, 
+                    latent[:, i + 2], 
+                    skip,
+                    direct_ss_style=direct_ss_style_i2
+                )
+                
+                if early_stop is not None and skip.size(-1) == early_stop:
+                    break
+
+                i += 2
+        
+        # StyleFeatureEditor原模式
+        else:
+            out = self.conv1(out, styles[0].float() if is_stylespace else latent[:, 0], 
+                            noise=noise[0], is_stylespace=is_stylespace)
+            outs.append(out)
+
+            skip = self.to_rgb1(out, to_rgb_stylespace[0].float() if is_stylespace else latent[:, 1], 
+                              is_stylespace=is_stylespace)
+
+            i = 1
+            for conv1, conv2, noise1, noise2, to_rgb in zip(
+                self.convs[::2], self.convs[1::2], noise[1::2], noise[2::2], self.to_rgbs
+            ):
+                out = insert_feature(out, i)
+                out = conv1(out, styles[i].float() if is_stylespace else latent[:, i], 
+                            noise=noise1, is_stylespace=is_stylespace)
+                outs.append(out)
+
+                out = insert_feature(out, i + 1)
+                out = conv2(out, styles[i + 1].float() if is_stylespace else latent[:, i + 1], 
+                            noise=noise2, is_stylespace=is_stylespace)
+                outs.append(out)
+
+                skip = to_rgb(out, to_rgb_stylespace[i // 2 + 1].float() if is_stylespace else latent[:, i + 2], 
+                                skip, is_stylespace=is_stylespace)
+                
+                if early_stop is not None and skip.size(-1) == early_stop:
+                    break
+
+                i += 2
 
         image = skip
 
         if return_latents:
+            if is_vivface_mode:
+                return image, {'w_latent': latent, 'ss_latent': ss_latent}
             return image, latent
         elif return_features:
             return image, outs

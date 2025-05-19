@@ -1,4 +1,5 @@
 import os
+import random
 from torch.utils.data import Dataset
 from PIL import Image
 from utils import data_utils
@@ -20,6 +21,106 @@ class ImageDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         return image
+
+
+class ViVFaceDataset(Dataset):
+    """
+    用于ViVFace训练的数据集类，从CelebV-HQ格式的数据集中加载：
+    1. S: 源图像
+    2. D1: 与S相同身份的不同表情/姿态图像
+    3. D2: 不同身份的图像
+    
+    目录结构应为:
+    - root/
+      - identity_00001/
+        - frame_00001.jpg
+        - frame_00002.jpg
+        - ...
+      - identity_00002/
+        - frame_00001.jpg
+        - ...
+    """
+    def __init__(self, root, transform=None):
+        self.root = root
+        self.transform = transform
+        
+        # 获取所有身份文件夹
+        self.identity_dirs = []
+        for d in os.listdir(root):
+            if os.path.isdir(os.path.join(root, d)) and d.startswith('identity_'):
+                self.identity_dirs.append(d)
+        
+        # 根据身份目录创建映射
+        self.identity_to_images = {}
+        for identity in self.identity_dirs:
+            identity_path = os.path.join(root, identity)
+            # 筛选frame_XXXXX.jpg格式的文件
+            images = []
+            for f in os.listdir(identity_path):
+                if f.startswith('frame_') and (f.endswith('.jpg') or f.endswith('.png')):
+                    images.append(os.path.join(identity_path, f))
+            
+            if len(images) >= 2:  # 确保每个身份至少有两张图像
+                # 按照帧号排序
+                images.sort(key=lambda x: int(os.path.basename(x).split('_')[1].split('.')[0]))
+                self.identity_to_images[identity] = images
+        
+        # 创建数据集索引到身份的映射
+        self.valid_identities = list(self.identity_to_images.keys())
+        self.dataset_indices = []
+        for identity in self.valid_identities:
+            images = self.identity_to_images[identity]
+            for i in range(len(images)):
+                self.dataset_indices.append((identity, i))
+        
+        print(f"ViVFaceDataset加载完成: {len(self.dataset_indices)}个样本，{len(self.valid_identities)}个不同身份")
+    
+    def __len__(self):
+        return len(self.dataset_indices)
+    
+    def __getitem__(self, index):
+        # 获取S（源图像）
+        identity_s, idx_s = self.dataset_indices[index]
+        images_s = self.identity_to_images[identity_s]
+        path_s = images_s[idx_s]
+        
+        # 获取D1（同身份不同表情/姿态）
+        # 从同一个身份中随机选择另一张图像
+        remaining_indices = [i for i in range(len(images_s)) if i != idx_s]
+        if not remaining_indices:  # 如果没有其他图像，则重复使用当前图像
+            idx_d1 = idx_s
+        else:
+            idx_d1 = random.choice(remaining_indices)
+        path_d1 = images_s[idx_d1]
+        
+        # 获取D2（不同身份）
+        # 随机选择不同的身份
+        other_identities = [id for id in self.valid_identities if id != identity_s]
+        identity_d2 = random.choice(other_identities)
+        images_d2 = self.identity_to_images[identity_d2]
+        path_d2 = random.choice(images_d2)
+        
+        # 加载并转换所有图像
+        image_s = Image.open(path_s).convert("RGB")
+        image_d1 = Image.open(path_d1).convert("RGB")
+        image_d2 = Image.open(path_d2).convert("RGB")
+        
+        if self.transform:
+            image_s = self.transform(image_s)
+            image_d1 = self.transform(image_d1)
+            image_d2 = self.transform(image_d2)
+        
+        # 返回字典格式的批次数据
+        batch = {
+            'source': image_s,        # S: 源图像
+            'same_id': image_d1,      # D1: 同身份不同表情
+            'diff_id': image_d2,      # D2: 不同身份
+            'source_path': path_s,
+            'same_id_path': path_d1,
+            'diff_id_path': path_d2
+        }
+        
+        return batch
 
 
 class CelebaAttributeDataset(Dataset):

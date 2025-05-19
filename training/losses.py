@@ -210,3 +210,202 @@ class R1Loss:
         grad_penalty = grad_real.pow(2).reshape(grad_real.shape[0], -1).sum(1).mean()
 
         return grad_penalty
+
+
+# ViVFace自定义损失函数
+
+@other_losses.add_to_registry(name="vivface_self_rec")
+class VIVFaceSelfRecLoss(nn.Module):
+    """
+    ViVFace自重建损失 - 计算源图像S与其重建S_hat之间的重建损失
+    包含L2损失、LPIPS损失和梯度方差损失的组合
+    """
+    def __init__(self):
+        super().__init__()
+        self.l2_loss = L2Loss()
+        self.lpips_loss = LPIPSLoss()
+        self.grad_criterion = GradientVarianceLoss(patch_size=8)  # 使用与ViVFace相同的patch_size
+        
+    def forward(self, batch):
+        # 获取源图像和自重建图像
+        x_s = batch["source"]
+        y_hat_s = batch["y_hat_s"]
+        
+        # 计算L2、LPIPS和梯度方差损失
+        l2_loss = self.l2_loss(y_hat_s, x_s)
+        lpips_loss = self.lpips_loss(y_hat_s, x_s).mean()
+        gv_loss = self.grad_criterion(y_hat_s, x_s)
+        
+        # 按照ViVFace的损失组合方式：L2 + LPIPS + GV
+        return l2_loss + lpips_loss + 0.1 * gv_loss
+
+
+@other_losses.add_to_registry(name="vivface_reenact")
+class VIVFaceReenactLoss(nn.Module):
+    """
+    ViVFace表情重演损失 - 计算驱动图像D1与表情迁移结果S_D1之间的重建损失
+    包含L2损失、LPIPS损失和梯度方差损失的组合
+    """
+    def __init__(self):
+        super().__init__()
+        self.l2_loss = L2Loss()
+        self.lpips_loss = LPIPSLoss()
+        self.grad_criterion = GradientVarianceLoss(patch_size=8)  # 使用与ViVFace相同的patch_size
+        
+    def forward(self, batch):
+        # 获取驱动图像和表情迁移结果
+        x_d1 = batch["same_id"]
+        y_hat_s_d1 = batch["y_hat_s_d1"]
+        
+        # 计算L2、LPIPS和梯度方差损失
+        l2_loss = self.l2_loss(y_hat_s_d1, x_d1)
+        lpips_loss = self.lpips_loss(y_hat_s_d1, x_d1).mean()
+        gv_loss = self.grad_criterion(y_hat_s_d1, x_d1)
+        
+        # 按照ViVFace的损失组合方式：L2 + LPIPS + GV
+        return l2_loss + lpips_loss + 0.1 * gv_loss
+
+
+@other_losses.add_to_registry(name="vivface_w_consistency")
+class VIVFaceWConsistencyLoss(nn.Module):
+    """
+    ViVFace w_latent一致性损失 - 确保身份编码的一致性
+    对比S的w_latent和D2_S的w_latent
+    """
+    def __init__(self):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+        
+    def forward(self, batch):
+        # 获取源图像S的w_latent和跨身份身份迁移D2_S的w_latent
+        w_s = batch["w_s"]
+        w_d2_s = batch["w_d2_s"]
+        
+        # 计算MSE损失
+        return self.mse_loss(w_s, w_d2_s)
+
+
+@other_losses.add_to_registry(name="vivface_ss_consistency")
+class VIVFaceSSConsistencyLoss(nn.Module):
+    """
+    ViVFace ss_latent一致性损失 - 确保表情编码的一致性
+    对比D2的ss_latent和D2_S的ss_latent
+    """
+    def __init__(self):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+        
+    def forward(self, batch):
+        # 获取不同身份图像D2的ss_latent和跨身份身份迁移结果D2_S的ss_latent
+        ss_d2 = batch["ss_d2"]
+        ss_d2_s = batch["ss_d2_s"]
+        
+        # 计算MSE损失
+        return self.mse_loss(ss_d2, ss_d2_s)
+
+
+@other_losses.add_to_registry(name="vivface_ss_regularization")
+class VIVFaceSSRegularizationLoss(nn.Module):
+    """
+    ViVFace ss_latent正则化损失 - 鼓励表情编码稀疏分布
+    计算D1的ss_latent与零向量之间的MSE
+    """
+    def __init__(self, delta_norm_lambda=0.2, s_lambda=1.0):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+        self.delta_norm_lambda = delta_norm_lambda  # 默认权重系数，与ViVFace对齐
+        self.s_lambda = s_lambda  # 默认权重系数，与ViVFace对齐
+        
+    def forward(self, batch):
+        # 获取同身份不同表情图像D1的ss_latent
+        ss_s = batch["ss_s"]
+        
+        # 计算与零向量的MSE损失，鼓励稀疏表示
+        zero_ss = torch.zeros_like(ss_s)
+        
+        # 应用权重系数，与原始ViVFace保持一致
+        return self.delta_norm_lambda * self.s_lambda * self.mse_loss(ss_s, zero_ss)
+
+
+@other_losses.add_to_registry(name="vivface_id")
+class VIVFaceIDLoss(nn.Module):
+    """
+    ViVFace身份保持损失 - 使用预训练人脸识别网络确保身份一致性
+    """
+    def __init__(self):
+        super().__init__()
+        self.id_loss = id_loss.IDLoss()
+        
+    def forward(self, batch):
+        # 获取源图像、中性表情生成结果和跨身份身份迁移结果
+        x_s = batch["source"]
+        y_hat_s_neutral = batch["y_hat_s_neutral"]
+        y_hat_d2_s = batch["y_hat_d2_s"]
+        
+        # 计算身份损失
+        id_loss_neutral = self.id_loss(y_hat_s_neutral, x_s)
+        id_loss_cross = self.id_loss(y_hat_d2_s, x_s)
+        
+        # 组合损失
+        return id_loss_neutral + id_loss_cross
+
+
+@other_losses.add_to_registry(name="vivface_delta")
+class VIVFaceDeltaLoss(nn.Module):
+    """
+    ViVFace渐进式delta损失 - 控制各层delta幅度
+    根据当前progressive_stage，逐层计算w_latent各层delta与w0之间的L2范数
+    """
+    def __init__(self, delta_norm_lambda=0.0002, p_norm=2):
+        super().__init__()
+        self.delta_norm_lambda = delta_norm_lambda  # 默认权重系数，与ViVFace对齐
+        self.p_norm = p_norm  # 使用L2范数
+        
+    def forward(self, batch):
+        # 获取w_latent和progressive_stage
+        w_s = batch["w_s"]
+        progressive_stage = batch["progressive_stage"]
+        
+        # 检查progressive_stage的类型，确保是ProgressiveStage枚举
+        if progressive_stage.value == 0 or progressive_stage.value == 18:  # W0阶段或Inference阶段不需要计算delta损失
+            return torch.tensor(0.0, device=w_s.device)
+        
+        # 计算各层delta的p范数，与原始ViVFace保持一致
+        first_w = w_s[:, 0, :]  # 使用第一层作为基准(W0)
+        
+        # 获取需要计算delta的维度，在原始ViVFace中是通过deltas_latent_dims获取的
+        # 但在我们的实现中，可以直接使用连续的索引
+        delta_loss = 0.0
+        for i in range(1, progressive_stage.value + 1):
+            delta = w_s[:, i, :] - first_w
+            delta_norm = torch.norm(delta, p=self.p_norm, dim=1).mean()
+            delta_loss += delta_norm
+            
+        # 应用权重系数
+        return self.delta_norm_lambda * delta_loss
+
+
+# 添加梯度方差损失
+@losses.add_to_registry(name="gradient_variance")
+class GradientVarianceLoss(nn.Module):
+    """
+    梯度方差损失(Gradient Variance Loss) - 来自ViVFace
+    用于增强边缘一致性，通过计算两张图像在x和y方向上的梯度差异
+    """
+    def __init__(self, patch_size=8):
+        super().__init__()
+        self.patch_size = patch_size
+        
+    def forward(self, y_hat, y):
+        # 计算x和y方向的梯度
+        grad_y_x = torch.abs(y[:, :, :, :-1] - y[:, :, :, 1:])
+        grad_y_y = torch.abs(y[:, :, :-1, :] - y[:, :, 1:, :])
+        grad_y_hat_x = torch.abs(y_hat[:, :, :, :-1] - y_hat[:, :, :, 1:])
+        grad_y_hat_y = torch.abs(y_hat[:, :, :-1, :] - y_hat[:, :, 1:, :])
+        
+        # 计算梯度差异的MSE损失
+        grad_diff_x = torch.nn.functional.mse_loss(grad_y_hat_x, grad_y_x)
+        grad_diff_y = torch.nn.functional.mse_loss(grad_y_hat_y, grad_y_y)
+        
+        # 返回两个方向梯度差异的平均值
+        return (grad_diff_x + grad_diff_y) / 2.0

@@ -62,9 +62,21 @@ def get_random_edit():
 @training_runners.add_to_registry(name="base_training_runner")
 class BaseTrainingRunner(BaseRunner):
     def setup(self):
+        # 如果已经初始化过并且有self.method属性，则直接返回
+        if hasattr(self, '_initialized') and self._initialized and hasattr(self, 'method'):
+            print("Runner已完全初始化，跳过setup流程")
+            return
+            
+        # 添加初始化标记属性
+        if not hasattr(self, '_initialized'):
+            self._initialized = False
+            
         self.start_step = self.config.train.start_step
         self._setup_device()
-        self._setup_experiment_dir()
+        
+        # 只在未初始化时设置实验目录
+        if not self._initialized:
+            self._setup_experiment_dir()
 
         self._setup_method()
         self._setup_logger()
@@ -78,11 +90,19 @@ class BaseTrainingRunner(BaseRunner):
             else self.config.model.batch_size
         )
 
+        print("start_batch_size: " + str(start_batch_size))
+        print("self.config.train.bs_used_before_adv_loss: " + str(self.config.train.bs_used_before_adv_loss))
+        print("self.config.train.train_dis: " + str(self.config.train.train_dis))
+        print("self.config.model.batch_size: " + str(self.config.model.batch_size))
+
         self._setup_dataloaders(start_batch_size)
 
         self._setup_latent_editor()
         self._setup_optimizers()
         self._setup_loss()
+        
+        # 设置初始化完成标记
+        self._initialized = True
 
     def get_base_model(self):
         """
@@ -111,21 +131,51 @@ class BaseTrainingRunner(BaseRunner):
         self.logger = TrainigLogger(self.config)
 
     def _setup_datasets(self):
+        # 如果已经初始化过，则跳过
+        if hasattr(self, '_initialized') and self._initialized:
+            print("数据集已初始化，跳过重复加载")
+            return
+            
         print("Loading dataset")
         transform_dict = transforms_registry[self.config.data.transform]().get_transforms()
-        self.train_dataset = ImageDataset(
-            self.config.data.input_train_dir, transform_dict["train"]
-        )
+        
+        # 根据配置选择数据集类型
+        dataset_type = getattr(self.config.data, "dataset_type", "image")
+        
+        if dataset_type == "vivface":
+            from datasets.datasets import ViVFaceDataset
+            print("Using ViVFaceDataset for training and validation")
+            
+            self.train_dataset = ViVFaceDataset(
+                self.config.data.input_train_dir, transform_dict["train"]
+            )
+            
+            self.test_dataset = ViVFaceDataset(
+                self.config.data.input_val_dir, transform_dict["test"]
+            )
+            
+            self.special_dataset = ViVFaceDataset(
+                self.config.data.special_dir, transform_dict["test"]
+            )
+            
+            # 为了兼容性，我们仍然需要设置paths
+            self.paths = []
+            self.special_paths = []
+        else:
+            # 默认使用普通的ImageDataset
+            self.train_dataset = ImageDataset(
+                self.config.data.input_train_dir, transform_dict["train"]
+            )
 
-        self.test_dataset = ImageDataset(
-            self.config.data.input_val_dir, transform_dict["test"]
-        )
-        self.paths = self.test_dataset.paths
+            self.test_dataset = ImageDataset(
+                self.config.data.input_val_dir, transform_dict["test"]
+            )
+            self.paths = self.test_dataset.paths
 
-        self.special_dataset = ImageDataset(
-            self.config.data.special_dir, transform_dict["test"]
-        )
-        self.special_paths = self.special_dataset.paths
+            self.special_dataset = ImageDataset(
+                self.config.data.special_dir, transform_dict["test"]
+            )
+            self.special_paths = self.special_dataset.paths
 
     def _setup_dataloaders(self, batch_size):
         # 设置分布式采样器
@@ -231,8 +281,12 @@ class BaseTrainingRunner(BaseRunner):
                     print('WARNING, continuing training without loading disc optimizer state!')
 
     def _setup_loss(self):
+        # 重写损失设置以添加额外的ViVFace特定损失
         enc_losses_dict = self.config.encoder_losses
         disc_losses_dict = self.config.disc_losses
+        
+        # 这里可以添加特定于ViVFace的损失
+        # 例如身份一致性损失、表情一致性损失等
 
         self.loss_builder = LossBuilder(
             enc_losses_dict, 
@@ -241,6 +295,11 @@ class BaseTrainingRunner(BaseRunner):
         )
 
     def _setup_experiment_dir(self):
+        # 如果已经初始化过，则跳过
+        if hasattr(self, '_initialized') and self._initialized:
+            print("实验目录已初始化，跳过重复创建")
+            return
+            
         base_root = Path(__file__).resolve().parent.parent
         num = 0
         exp_dir = self.config.exp.exp_dir
@@ -393,22 +452,41 @@ class BaseTrainingRunner(BaseRunner):
                     torch.distributed.barrier()
 
     def train_step(self):
+        """
+        重写train_step方法，适应ViVFaceDataset返回的字典格式数据，并添加渐进式训练检查
+        """
         # 在每次step开始时打印当前的步骤信息
         if self.global_step % 2 == 0 and (not self.config.dist.enabled or self.config.dist.rank == 0):  # 每2步打印一次，避免输出过多，并且只在主进程打印
             progress = self.global_step / self.config.train.steps * 100
             print(f"Step {self.global_step}/{self.config.train.steps} ({progress:.2f}%)")
         
-        x = next(self.train_dataloader)
-        x = x.to(self.device).float()
-        output = self.forward(x)
+        # 获取批次数据
+        batch = next(self.train_dataloader)
 
+        print("batch: " + str(batch))    
+        
+        # 如果是字典类型，需要将每个张量移到正确的设备
+        if isinstance(batch, dict):
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(self.device).float()
+        else:
+            # 如果不是字典，按原来的方式处理
+            batch = batch.to(self.device).float()
+        
+        # 前向传播
+        output = self.forward(batch)
+        
+        # 计算损失
         enc_loss, loss_dict = self.loss_builder.encoder_loss(output["encoder"])
-
+        
+        # 反向传播
         self.encoder_optimizer.zero_grad()
         enc_loss.backward()
         self.encoder_optimizer.step()
         loss_dict["enc_loss"] = float(enc_loss)
-
+        
+        # 如果启用了判别器训练
         if (
             self.config.train.train_dis
             and self.global_step >= self.config.train.dis_train_start_step
@@ -418,30 +496,34 @@ class BaseTrainingRunner(BaseRunner):
             if self.train_dataloader.batch_size != self.config.model.batch_size:
                 if not self.config.dist.enabled or self.config.dist.rank == 0:
                     print(f"Changing batch size from {self.train_dataloader.batch_size} to {self.config.model.batch_size}")
-                self.setup_dataloaders(self.config.model.batch_size)
-
+                self._setup_dataloaders(self.config.model.batch_size)
+            
             # 获取判别器并训练，处理DDP情况
             discriminator = self.get_model_component('discriminator')
             toogle_grad(discriminator, True)
             discriminator.train()
-
+            
             disc_loss, disc_losses_dict = self.loss_builder.disc_loss(
                 discriminator, 
                 output["to_disc"]
                 )
             loss_dict.update(disc_losses_dict)
-
+            
             self.disc_optimizer.zero_grad()
             disc_loss.backward()
             self.disc_optimizer.step()
-
+            
             toogle_grad(discriminator, False)
             discriminator.eval()
-
+        
         # 确保latent_avg不参与反向传播
         base_model = self.get_base_model()
         base_model.latent_avg = base_model.latent_avg.detach()
-
+        
+        # 检查是否需要更新渐进式训练阶段
+        if self.enable_progressive_training:
+            self.check_for_progressive_training_update()
+        
         return loss_dict
 
     def save_checkpoint(self):
@@ -495,24 +577,34 @@ class BaseTrainingRunner(BaseRunner):
             if metric.get_name() == "FID":
                 continue
 
+            # 使用处理过的样本的路径
+            sample_paths = self.processed_paths
+
             from_data_arg = {
                 "fake_data": self.val_pics_res,
                 "inp_data": self.val_pics_orig,
-                "paths": self.special_paths,
+                "paths": sample_paths,
             }
-            metric_data, _, _ = metric(
-                None, None, out_path=None, from_data=from_data_arg
-            )
             
-            # 确保metric_data有所有路径的键
-            for path in self.special_paths:
-                basename = os.path.basename(path)
-                if basename in metric_data:
-                    metric_value = metric_data[basename]
-                    captions[path] += f"{metric.get_name()}: {metric_value:.3}\n"
-                else:
-                    # 如果找不到这个路径，添加一个占位符
-                    captions[path] += f"{metric.get_name()}: N/A\n"
+            try:
+                metric_data, _, _ = metric(
+                    None, None, out_path=None, from_data=from_data_arg
+                )
+                
+                # 确保metric_data有所有路径的键
+                for path in sample_paths:
+                    basename = os.path.basename(path)
+                    if basename in metric_data:
+                        metric_value = metric_data[basename]
+                        captions[path] += f"{metric.get_name()}: {metric_value:.3}\n"
+                    else:
+                        # 如果找不到这个路径，添加一个占位符
+                        captions[path] += f"{metric.get_name()}: N/A\n"
+            except Exception as e:
+                print(f"Error calculating {metric.get_name()}: {e}")
+                # 为每个样本添加错误信息
+                for path in sample_paths:
+                    captions[path] += f"{metric.get_name()}: Error\n"
 
         return self.val_pics_orig, self.val_pics_res, captions
 
@@ -527,10 +619,13 @@ class BaseTrainingRunner(BaseRunner):
         if not self.config.dist.enabled or self.config.dist.rank == 0:
             self.val_pics_res = []
             self.val_pics_orig = []
+            # 保存处理过的样本的路径
+            self.processed_paths = []
         else:
             # 非主进程不需要收集图像，只参与计算
             self.val_pics_res = []  # 使用空列表而不是None，避免属性不存在的错误
             self.val_pics_orig = []
+            self.processed_paths = []
 
         if not special:
             dataloader = self.test_dataloader
@@ -542,16 +637,46 @@ class BaseTrainingRunner(BaseRunner):
         # 记录本进程处理的样本索引，用于调试
         batch_indices = []
         
+        # 限制验证样本数量，避免处理过多数据
+        # 验证时只使用前100个样本
+        max_val_samples = 100
+        sample_count = 0
+        
         global_i = 0
         for input_batch in tqdm(dataloader, disable=self.config.dist.enabled and self.config.dist.rank != 0):
-            input_batch = input_batch.to(self.device).float()
+            # 检查是否已达到最大样本数
+            if sample_count >= max_val_samples:
+                break
+                
+            # 检查输入是否为字典格式（ViVFaceDataset返回的格式）
+            if isinstance(input_batch, dict):
+                original_image = input_batch['source']
+                if 'source_path' in input_batch:
+                    current_paths = [input_batch['source_path']]
+                else:
+                    current_paths = []
+            else:
+                original_image = input_batch
+                current_paths = []
+            
+            # 确保原始图像保存在CPU上用于后续处理
+            original_image_cpu = original_image
+            if isinstance(original_image_cpu, torch.Tensor) and original_image_cpu.device != torch.device('cpu'):
+                original_image_cpu = original_image_cpu.to('cpu')
+            
+            # 运行模型 - _run_on_batch内部会确保数据移动到正确的设备
             result_batch = self._run_on_batch(input_batch)
             
+            # 确保结果移回CPU用于后续处理
+            if isinstance(result_batch, torch.Tensor) and result_batch.device != torch.device('cpu'):
+                result_batch = result_batch.to('cpu')
+            
             # 记录当前批次的索引
-            batch_size = input_batch.shape[0]
+            batch_size = result_batch.shape[0]
             indices = list(range(global_i, global_i + batch_size))
             batch_indices.extend(indices)
             global_i += batch_size
+            sample_count += batch_size
                 
             # 只在主进程收集结果
             if not self.config.dist.enabled or self.config.dist.rank == 0:
@@ -568,19 +693,35 @@ class BaseTrainingRunner(BaseRunner):
 
                     self.val_pics_res.append(img)
                     
-                    # 确保索引在路径范围内
-                    if idx < len(paths):
+                    # 添加原始图像
+                    if isinstance(input_batch, dict) and 'source' in input_batch:
+                        # 如果是字典格式，使用source图像
+                        orig_img = tensor2im(original_image_cpu[i] if isinstance(original_image_cpu, torch.Tensor) else original_image_cpu)
+                        self.val_pics_orig.append(Image.fromarray(np.array(orig_img)).convert("RGB"))
+                        # 添加路径到processed_paths（如果有）
+                        if 'source_path' in input_batch and i < len(input_batch['source_path']):
+                            self.processed_paths.append(input_batch['source_path'][i])
+                        else:
+                            self.processed_paths.append(f"img_{idx}")
+                    elif idx < len(paths):
+                        # 否则使用paths中的路径
                         self.val_pics_orig.append(
                             Image.open(paths[idx]).convert("RGB")
                         )
+                        # 添加路径到processed_paths
+                        self.processed_paths.append(paths[idx])
                     else:
                         print(f"Warning: index {idx} out of range for paths (length {len(paths)})")
+                        self.val_pics_orig.append(Image.new('RGB', (256, 256), color = 'black'))
+                        self.processed_paths.append(f"img_{idx}")
 
         # 在分布式设置中，我们需要确保所有进程完成验证
         if self.config.dist.enabled:
             if self.config.dist.rank == 0:
                 print(f"Rank 0 processed {len(batch_indices)} samples with indices: {batch_indices[:10]}...")
             torch.distributed.barrier()
+        else:
+            print(f"Processed {len(batch_indices)} samples for validation (limited from total {len(dataloader.dataset)})")
 
         metrics_dict = {}
         if not special and (not self.config.dist.enabled or self.config.dist.rank == 0):
@@ -596,7 +737,7 @@ class BaseTrainingRunner(BaseRunner):
                 from_data_arg = {
                     "fake_data": self.val_pics_res,
                     "inp_data": self.val_pics_orig,
-                    "paths": paths[:len(self.val_pics_res)],  # 确保路径数量匹配
+                    "paths": paths[:len(self.val_pics_res)] if len(paths) > 0 else ["img_" + str(i) for i in range(len(self.val_pics_res))],  # 确保路径数量匹配
                 }
                 _, metric_mean, _ = metric(
                     None, None, out_path=None, from_data=from_data_arg
@@ -622,6 +763,11 @@ class BaseTrainingRunner(BaseRunner):
             self.device = torch.device("cpu")
 
     def _setup_method(self):
+        # 如果已经初始化过，则跳过
+        if hasattr(self, '_initialized') and self._initialized:
+            print("模型已初始化，跳过重复加载")
+            return
+            
         # 先初始化模型
         method_name = self.config.model.method
         self.method = methods_registry[method_name](
@@ -642,6 +788,10 @@ class BaseTrainingRunner(BaseRunner):
                 output_device=self.config.dist.rank,
                 find_unused_parameters=self.config.dist.find_unused_parameters
             )
+
+    def _setup_latent_editor(self):
+        # 基础实现为空，子类可以根据需要覆盖此方法
+        pass
 
 
 @training_runners.add_to_registry(name="fse_inverter")
@@ -689,7 +839,22 @@ class FSEInverterTrainingRunner(BaseTrainingRunner):
         return output
 
     def _run_on_batch(self, inputs):
-        result_batch = self.method(inputs)
+        # 检查输入是否为字典格式（ViVFaceDataset返回的格式）
+        if isinstance(inputs, dict):
+            # 对于验证，我们只使用source图像
+            if 'source' in inputs:
+                # 确保数据在正确的设备上
+                source = inputs['source']
+                if isinstance(source, torch.Tensor) and source.device != self.device:
+                    source = source.to(self.device)
+                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
+                return result_batch
+        
+        # 处理传统格式的输入（普通图像张量）
+        # 确保数据在正确的设备上
+        if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
+            inputs = inputs.to(self.device)
+        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
         return result_batch
 
 
@@ -873,5 +1038,333 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
         return output
 
     def _run_on_batch(self, inputs):
-        result_batch = self.method(inputs)
+        # 检查输入是否为字典格式（ViVFaceDataset返回的格式）
+        if isinstance(inputs, dict):
+            # 对于验证，我们只使用source图像
+            if 'source' in inputs:
+                # 确保数据在正确的设备上
+                source = inputs['source']
+                if isinstance(source, torch.Tensor) and source.device != self.device:
+                    source = source.to(self.device)
+                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
+                return result_batch
+        
+        # 处理传统格式的输入（普通图像张量）
+        # 确保数据在正确的设备上
+        if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
+            inputs = inputs.to(self.device)
+        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
         return result_batch
+
+
+@training_runners.add_to_registry(name="vivface_training")
+class ViVFaceTrainingRunner(BaseTrainingRunner):
+    """
+    用于训练ViVFace模型的第一阶段（W+训练）
+    
+    该阶段主要训练E4E编码器以生成高质量的w_latent和ss_latent，
+    实现身份与表情的解耦。
+    """
+    def __init__(self, config):
+        # 调用父类初始化
+        super(ViVFaceTrainingRunner, self).__init__(config)
+        
+        # 确保模型和基础组件已初始化
+        if not hasattr(self, 'method'):
+            # 如果method尚未初始化，需要显式调用setup
+            self.setup()
+        
+        # 初始化额外的ViVFace特定属性
+        # 初始化global_step
+        self.global_step = self.config.train.start_step
+        
+        # 设置编码器的训练阶段
+        if hasattr(self.config.train, "progressive_stage"):
+            stage_name = self.config.train.progressive_stage
+            base_model = self.get_base_model()
+            encoder = base_model.encoder
+            
+            # 将字符串转换为枚举值
+            stage = getattr(ProgressiveStage, stage_name)
+            encoder.set_progressive_stage(stage)
+            
+            print(f"ViVFace训练阶段设置为: {stage_name}")
+        
+        # 初始化是否需要进行渐进式训练更新的检查
+        self.enable_progressive_training = False
+        if hasattr(self.config.train, "enable_progressive_training"):
+            self.enable_progressive_training = self.config.train.enable_progressive_training
+        
+        # 初始化渐进式训练步骤
+        self.progressive_steps = []
+        if hasattr(self.config.train, "progressive_steps"):
+            self.progressive_steps = self.config.train.progressive_steps
+            print(f"渐进式训练步骤设置为: {self.progressive_steps}")
+            
+        # 如果从检查点恢复训练，立即检查并更新训练阶段
+        if self.enable_progressive_training and self.global_step > 0:
+            self.check_for_progressive_training_update(is_resume_from_ckpt=True)
+    
+    def check_for_progressive_training_update(self, is_resume_from_ckpt=False):
+        """
+        检查是否需要更新渐进式训练阶段
+        
+        Args:
+            is_resume_from_ckpt: 是否从检查点恢复训练的检查
+        """
+        if not self.enable_progressive_training:
+            return
+            
+        if not self.progressive_steps:
+            return
+            
+        # 获取基础模型和编码器
+        base_model = self.get_base_model()
+        encoder = base_model.encoder
+        
+        # 检查每个进度阶段
+        for i, step in enumerate(self.progressive_steps):
+            # 从检查点恢复时，如果当前步骤已经超过了特定的进度阶段，直接设置为该阶段
+            if is_resume_from_ckpt and self.global_step >= step:
+                if i < len(ProgressiveStage):  # 确保索引不超出ProgressiveStage范围
+                    encoder.set_progressive_stage(ProgressiveStage(i))
+                    print(f"从检查点恢复：更新渐进式训练阶段至 {ProgressiveStage(i)}")
+            
+            # 在正常训练中，当达到特定步骤时更新训练阶段
+            if self.global_step == step:
+                if i < len(ProgressiveStage):  # 确保索引不超出ProgressiveStage范围
+                    encoder.set_progressive_stage(ProgressiveStage(i))
+                    print(f"更新渐进式训练阶段至 {ProgressiveStage(i)}")
+    
+    def forward(self, batch):
+        # 获取原始模型，处理DDP包装情况
+        base_model = self.get_base_model()
+        
+        # 从批次中提取三种图像
+        S = batch['source']       # 源图像
+        D1 = batch['same_id']     # 相同身份不同表情
+        D2 = batch['diff_id']     # 不同身份
+        
+        # 1. 自重建路径 (S→S_hat)
+        w_S, ss_S = base_model.encoder(S)
+        
+        # 确保latent_avg在与w_S相同的设备上
+        latent_avg = base_model.latent_avg.to(w_S.device)
+        w_S = w_S + latent_avg.unsqueeze(0).repeat(w_S.shape[0], 1, 1)
+        
+        S_hat, _ = base_model.decoder([w_S], input_is_latent=True, ss_latent=ss_S)
+        # 将S_hat从1024x1024降采样到256x256
+        S_hat_downsampled = F.interpolate(S_hat, size=(256, 256), mode='bilinear', align_corners=False)
+        
+        # 释放原始分辨率的S_hat
+        del S_hat
+        torch.cuda.empty_cache()
+        
+        # 2. 同身份表情迁移 (S+D1→S_D1)
+        _, ss_D1 = base_model.encoder(D1)
+        S_D1, _ = base_model.decoder([w_S], input_is_latent=True, ss_latent=ss_D1)
+        # 将S_D1从1024x1024降采样到256x256
+        S_D1_downsampled = F.interpolate(S_D1, size=(256, 256), mode='bilinear', align_corners=False)
+        
+        # 删除不再需要的变量
+        del S_D1, ss_D1
+        torch.cuda.empty_cache()
+        
+        # 3. 中性表情生成 (S→S_neutral)
+        ss_zero = torch.zeros_like(ss_S)
+        S_neutral, _ = base_model.decoder([w_S], input_is_latent=True, ss_latent=ss_zero)
+        # 将S_neutral从1024x1024降采样到256x256
+        S_neutral_downsampled = F.interpolate(S_neutral, size=(256, 256), mode='bilinear', align_corners=False)
+        
+        # 删除不再需要的变量
+        del S_neutral, ss_zero
+        torch.cuda.empty_cache()
+        
+        # 4. 跨身份身份迁移 (D2+S→D2_S)
+        _, ss_D2 = base_model.encoder(D2)
+        
+        
+        # 使用S的身份(w_S)和D2的表情(ss_D2)创建D2_S
+        D2_S, _ = base_model.decoder([w_S], input_is_latent=True, ss_latent=ss_D2)
+        # 将D2_S从1024x1024降采样到256x256
+        D2_S_downsampled = F.interpolate(D2_S, size=(256, 256), mode='bilinear', align_corners=False)
+        
+        # 删除原始分辨率的D2_S
+        del D2_S
+        torch.cuda.empty_cache()
+        
+        # 获取D2_S的编码用于一致性损失
+        w_D2_S, ss_D2_S = base_model.encoder(D2_S_downsampled)
+        
+        # 确保latent_avg在与w_D2_S相同的设备上
+        latent_avg = base_model.latent_avg.to(w_D2_S.device)
+        w_D2_S = w_D2_S + latent_avg.unsqueeze(0).repeat(w_D2_S.shape[0], 1, 1)
+
+        # 构建适用于LossBuilder的输出格式
+        output = {"encoder": {}, "to_disc": {}}
+        
+        # 基本图像和编码数据
+        output["encoder"]["source"] = S
+        output["encoder"]["same_id"] = D1
+        output["encoder"]["y_hat_s"] = S_hat_downsampled
+        output["encoder"]["y_hat_s_d1"] = S_D1_downsampled
+        output["encoder"]["y_hat_s_neutral"] = S_neutral_downsampled
+        output["encoder"]["y_hat_d2_s"] = D2_S_downsampled
+        output["encoder"]["w_s"] = w_S
+        output["encoder"]["ss_s"] = ss_S
+        output["encoder"]["ss_d2"] = ss_D2
+        
+        # 新增：D2_S的潜在编码，用于一致性损失
+        output["encoder"]["w_d2_s"] = w_D2_S
+        output["encoder"]["ss_d2_s"] = ss_D2_S
+        
+        # 获取当前进度阶段信息（用于delta损失）
+        output["encoder"]["progressive_stage"] = base_model.encoder.progressive_stage
+        
+        # 对抗损失相关设置
+        use_adv_loss = (
+            self.config.train.train_dis
+            and self.global_step >= self.config.train.dis_train_start_step
+        )
+        output["encoder"]["use_adv_loss"] = use_adv_loss
+        
+        if use_adv_loss:
+            # 添加判别器相关数据
+            discriminator = base_model.discriminator
+            
+            # 避免一次性创建太大的张量，分步处理
+            # 注意：这里我们只使用降采样后的图像
+            S_hat_D1 = torch.cat([S_hat_downsampled, S_D1_downsampled], dim=0)
+            S_neutral_D2_S = torch.cat([S_neutral_downsampled, D2_S_downsampled], dim=0)
+            
+            # 最后再合并
+            concat_images = torch.cat([S_hat_D1, S_neutral_D2_S], dim=0)
+            
+            # 删除中间变量以节省内存
+            del S_hat_D1, S_neutral_D2_S
+            
+            # 在执行判别器操作前再次清除缓存
+            torch.cuda.empty_cache()
+
+            c = torch.zeros(concat_images.size(0), 0, device=concat_images.device)
+            
+            # 直接使用256x256分辨率图像进行判别 - 修改后的判别器已支持256x256输入
+            output["encoder"]["fake_preds"] = discriminator(concat_images, c)
+            output["to_disc"]["y_hat"] = concat_images
+            output["to_disc"]["x"] = torch.cat([S, D1, S, D2], dim=0)
+            output["to_disc"]["c"] = c
+            output["to_disc"]["step"] = self.global_step
+        
+        # 最后一次清理缓存，确保返回前释放不必要的内存
+        torch.cuda.empty_cache()
+        
+        return output
+
+    def _run_on_batch(self, inputs):
+        # 检查输入是否为字典格式（ViVFaceDataset返回的格式）
+        if isinstance(inputs, dict):
+            # 对于验证，我们只使用source图像
+            if 'source' in inputs:
+                # 确保数据在正确的设备上
+                source = inputs['source']
+                if isinstance(source, torch.Tensor) and source.device != self.device:
+                    source = source.to(self.device)
+                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
+                return result_batch
+        
+        # 处理传统格式的输入（普通图像张量）
+        # 确保数据在正确的设备上
+        if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
+            inputs = inputs.to(self.device)
+        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
+        return result_batch
+    
+    def _setup_loss(self):
+        # 重写损失设置以添加额外的ViVFace特定损失
+        enc_losses_dict = self.config.encoder_losses
+        disc_losses_dict = self.config.disc_losses
+        
+        # 这里可以添加特定于ViVFace的损失
+        # 例如身份一致性损失、表情一致性损失等
+
+        self.loss_builder = LossBuilder(
+            enc_losses_dict, 
+            disc_losses_dict, 
+            self.device
+        )
+
+    def train_step(self):
+        """
+        重写train_step方法，适应ViVFaceDataset返回的字典格式数据，并添加渐进式训练检查
+        """
+        # 在每次step开始时打印当前的步骤信息
+        if self.global_step % 2 == 0 and (not self.config.dist.enabled or self.config.dist.rank == 0):  # 每2步打印一次，避免输出过多，并且只在主进程打印
+            progress = self.global_step / self.config.train.steps * 100
+            print(f"Step {self.global_step}/{self.config.train.steps} ({progress:.2f}%)")
+        
+        # 获取批次数据
+        batch = next(self.train_dataloader)
+        
+        # 如果是字典类型，需要将每个张量移到正确的设备
+        if isinstance(batch, dict):
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(self.device).float()
+        else:
+            # 如果不是字典，按原来的方式处理
+            batch = batch.to(self.device).float()
+        
+        # 前向传播
+        output = self.forward(batch)
+        
+        # 计算损失
+        enc_loss, loss_dict = self.loss_builder.encoder_loss(output["encoder"])
+        
+        # 反向传播
+        self.encoder_optimizer.zero_grad()
+        enc_loss.backward()
+        self.encoder_optimizer.step()
+        loss_dict["enc_loss"] = float(enc_loss)
+        
+        # 如果启用了判别器训练
+        if (
+            self.config.train.train_dis
+            and self.global_step >= self.config.train.dis_train_start_step
+        ):
+            if self.global_step == self.config.train.dis_train_start_step and (not self.config.dist.enabled or self.config.dist.rank == 0):
+                print("Start training with discriminator")
+            if self.train_dataloader.batch_size != self.config.model.batch_size:
+                if not self.config.dist.enabled or self.config.dist.rank == 0:
+                    print(f"Changing batch size from {self.train_dataloader.batch_size} to {self.config.model.batch_size}")
+                self._setup_dataloaders(self.config.model.batch_size)
+            
+            # 获取判别器并训练，处理DDP情况
+            discriminator = self.get_model_component('discriminator')
+            toogle_grad(discriminator, True)
+            discriminator.train()
+            
+            disc_loss, disc_losses_dict = self.loss_builder.disc_loss(
+                discriminator, 
+                output["to_disc"]
+                )
+            loss_dict.update(disc_losses_dict)
+            
+            self.disc_optimizer.zero_grad()
+            disc_loss.backward()
+            self.disc_optimizer.step()
+            
+            toogle_grad(discriminator, False)
+            discriminator.eval()
+        
+        # 确保latent_avg不参与反向传播
+        base_model = self.get_base_model()
+        base_model.latent_avg = base_model.latent_avg.detach()
+        
+        # 检查是否需要更新渐进式训练阶段
+        if self.enable_progressive_training:
+            self.check_for_progressive_training_update()
+        
+        # 清除缓存
+        torch.cuda.empty_cache()
+        
+        return loss_dict

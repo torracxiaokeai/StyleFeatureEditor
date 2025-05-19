@@ -367,6 +367,30 @@ class ProgressiveStage(Enum):
     Inference = 18
 
 
+class GradualDeformationBlock(Module):
+    def __init__(self, in_c, out_c, spatial):
+        super(GradualDeformationBlock, self).__init__()
+        self.out_c = out_c
+        self.spatial = spatial
+        num_pools = int(np.log2(spatial))
+        modules = []
+        modules += [Conv2d(in_c, out_c, kernel_size=3, stride=2, padding=1),
+                    nn.LeakyReLU()]
+        for i in range(num_pools - 1):
+            modules += [
+                Conv2d(out_c, out_c, kernel_size=3, stride=2, padding=1),
+                nn.LeakyReLU()
+            ]
+        self.convs = nn.Sequential(*modules)
+        self.linear = EqualLinear(out_c, out_c, lr_mul=1)
+    
+    def forward(self, x):
+        x = self.convs(x)
+        x = x.view(-1, self.out_c)
+        x = self.linear(x)
+        return x
+
+
 class Encoder4Editing(Module):
     def __init__(self, num_layers, mode="ir", opts=None):
         super(Encoder4Editing, self).__init__()
@@ -391,10 +415,15 @@ class Encoder4Editing(Module):
         self.body = Sequential(*modules)
 
         self.styles = nn.ModuleList()
+        self.ss_styles = nn.ModuleList()
         log_size = int(math.log(opts.stylegan_size, 2))
         self.style_count = 2 * log_size - 2
         self.coarse_ind = 3
         self.middle_ind = 7
+        self.ss_style_count = 10  # 默认与style_count相同，可以通过opts配置
+
+        if hasattr(opts, 'ss_styles'):
+            self.ss_style_count = opts.ss_styles
 
         for i in range(self.style_count):
             if i < self.coarse_ind:
@@ -404,6 +433,15 @@ class Encoder4Editing(Module):
             else:
                 style = GradualStyleBlock(512, 512, 64)
             self.styles.append(style)
+        
+        # 添加表情路径（ss_latent）编码器
+        for i in range(self.ss_style_count):
+            if i < self.coarse_ind:
+                self.ss_styles.append(GradualDeformationBlock(512, 512, 16))
+            elif i < self.middle_ind:
+                self.ss_styles.append(GradualDeformationBlock(512, 512, 32))
+            else:
+                self.ss_styles.append(GradualDeformationBlock(512, 512, 64))
 
         self.latlayer1 = nn.Conv2d(256, 512, kernel_size=1, stride=1, padding=0)
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
@@ -421,7 +459,9 @@ class Encoder4Editing(Module):
     def forward(self, x, return_feat=False):
         x = self.input_layer(x)
 
+        ss_latents = []
         modulelist = list(self.body._modules.values())
+        
         for i, l in enumerate(modulelist):
             x = l(x)
             if i == 6:
@@ -436,6 +476,10 @@ class Encoder4Editing(Module):
         w = w0.repeat(self.style_count, 1, 1).permute(1, 0, 2)
         stage = self.progressive_stage.value
         features = c3
+        
+        # 从c3生成第一个ss_latent
+        ss_latents.append(self.ss_styles[0](features).unsqueeze(1)) 
+        
         for i in range(1, min(stage + 1, self.style_count)):  # Infer additional deltas
             if i == self.coarse_ind:
                 p2 = _upsample_add(c3, self.latlayer1(c2))  # FPN's middle features
@@ -443,8 +487,18 @@ class Encoder4Editing(Module):
             elif i == self.middle_ind:
                 p1 = _upsample_add(p2, self.latlayer2(c1))  # FPN's fine features
                 features = p1
+            
+            # w_latent路径
             delta_i = self.styles[i](features)
             w[:, i] += delta_i
+            
+            # ss_latent路径
+            if i < self.ss_style_count:
+                ss_latents.append(self.ss_styles[i](features).unsqueeze(1))
+        
+        # 组合ss_latent
+        ss_out = torch.cat(ss_latents, dim=1)
+        
         if return_feat:
-            return w, features
-        return w
+            return w, ss_out, features
+        return w, ss_out

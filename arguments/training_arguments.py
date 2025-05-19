@@ -26,6 +26,7 @@ class ExperimentArgs:
     wandb: bool = True
     wandb_project: str = "sfe"
     domain: str = "human_faces"
+    resume: bool = False
 
 
 @args.add_to_registry("data")
@@ -35,6 +36,7 @@ class DataArgs:
     transform: str = "face_1024"
     input_train_dir: str = MISSING
     input_val_dir: str = MISSING
+    dataset_type: str = "ffhq"
 
 
 @args.add_to_registry("train")
@@ -58,6 +60,12 @@ class TrainingArgs:
     disc_edits: List[str] = field(
         default_factory=lambda: []
     )
+    progressive_stage: str = "WTraining"
+    enable_progressive_training: bool = True
+    progressive_steps: List[int] = field(
+        default_factory=lambda: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000]
+    )
+
 
 @args.add_to_registry("model")
 @dataclass
@@ -82,6 +90,14 @@ class EncoderLossesArgs:
     feat_rec_l1: float = 0.0
     l2_latent: float = 0.0
     id_vit: float = 0.0
+    # ViVFace相关损失函数参数
+    vivface_self_rec: float = 0.0
+    vivface_reenact: float = 0.0
+    vivface_w_consistency: float = 0.0
+    vivface_ss_consistency: float = 0.0
+    vivface_ss_regularization: float = 0.0
+    vivface_id: float = 0.0
+    vivface_delta: float = 0.0
 
 
 @args.add_to_registry("dist")

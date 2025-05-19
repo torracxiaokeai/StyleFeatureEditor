@@ -1,0 +1,87 @@
+train:
+  train_runner: "vivface_training"
+  progressive_stage: "WTraining"
+  steps: 500000
+  start_step: 0
+  val_step: 2500
+  log_step: 100
+  checkpoint_step: 1000
+  val_metrics: ["msssim", "lpips", "l2", "fid"]
+  encoder_optimizer: "adam"
+  train_dis: true
+  disc_optimizer: "adam"
+  dis_train_start_step: 2000
+  bs_used_before_adv_loss: 4
+  disc_edits: ["all"]
+  progressive_steps: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000]
+  enable_progressive_training: true
+
+model:
+  method: vivface_fse
+  checkpoint_path: ""
+  batch_size: 2
+  workers: 2
+
+# ViVFace损失函数配置
+encoder_losses:
+  vivface_self_rec: 1.0
+  vivface_reenact: 1.0
+  vivface_w_consistency: 0.2
+  vivface_ss_consistency: 1.0
+  vivface_ss_regularization: 0.2
+  vivface_id: 0.1
+  vivface_delta: 0.0002
+  adv: 0
+
+# 判别器损失
+disc_losses:
+  r1:
+    coef: 10
+    hyper_d_reg_every: 16
+  main:
+    coef: 1
+
+# 优化器设置
+optimizers:
+  adam:
+    lr: 0.0001
+    betas: [0.9, 0.999]
+    weight_decay: 0
+
+# 数据路径配置
+data:
+  transform: "vivface_transform"
+  dataset_type: "vivface"
+  input_train_dir: "/root/avatar_project/CelebV-HQ/train/"
+  input_val_dir: "/root/avatar_project/CelebV-HQ/test/"
+  special_dir: "/root/avatar_project/CelebV-HQ/test/"
+
+# 实验配置
+exp:
+  name: vivface_train
+  exp_dir: experiments
+  wandb: false
+  resume: false
+
+# 分布式训练配置
+dist:
+  enabled: True
+  port: 10086
+  world_size: 2
+  rank: 0
+  sync_bn: true
+  find_unused_parameters: true
+
+# 方法参数
+methods_args:
+  vivface_fse:
+    device: "cuda:0"
+    progressive_stage: "WTraining"
+    ss_style_count: 10
+
+# 指标配置
+metrics:
+  msssim: {}
+  lpips: {}
+  l2: {}
+  fid: {}

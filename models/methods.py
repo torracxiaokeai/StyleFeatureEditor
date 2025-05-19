@@ -16,6 +16,7 @@ from utils.model_utils import toogle_grad
 from configs.paths import DefaultPaths
 from argparse import Namespace
 from training.loggers import BaseTimer
+from models.psp.encoders.psp_encoders import ProgressiveStage
 
 
 sys.path.append("./utils")
@@ -99,6 +100,8 @@ class FSEFull(nn.Module):
         self.e4e_encoder = self.e4e_encoder.eval().to(self.device)
         toogle_grad(self.e4e_encoder, False)
 
+        # 不加载编码器权重，从头训练
+        print("Training Encoder from scratch")
 
     def set_encoder(self):
         self.inverter = psp_encoders.Inverter(opts=self.opts, n_styles=18) 
@@ -252,4 +255,201 @@ class FSEInverter(nn.Module):
                 fused_feat = fused_feat.cpu()
                 w_feat = w_feat.cpu()
             return images, w_recon, fused_feat, w_feat
+        return images
+
+
+@methods_registry.add_to_registry("vivface_fse", stop_args=("self", "checkpoint_path"))
+class VIVFaceFSE(nn.Module):
+    """
+    ViVFace身份与表情解耦模型
+    
+    该模型基于StyleFeatureEditor架构，但使用了双路径（w_latent和ss_latent）处理身份和表情信息。
+    - w_latent: 控制身份特征
+    - ss_latent: 控制表情特征
+    """
+    def __init__(self,
+                 device="cuda:0",
+                 paths=DefaultPaths,
+                 checkpoint_path=None,
+                 e4e_path=None,
+                 progressive_stage=None,
+                 ss_style_count=10):
+        super(VIVFaceFSE, self).__init__()
+        self.opts = {
+            "device": device,
+            "checkpoint_path": checkpoint_path,
+            "stylegan_size": 1024,
+            "ss_styles": ss_style_count
+        }
+        self.opts.update(paths)
+        self.opts = Namespace(**self.opts)
+
+        self.device = device
+        self.e4e_path = e4e_path or self.opts.e4e_path
+
+        # 创建编码器和解码器
+        self.encoder = self.set_encoder()
+        self.decoder = Generator(self.opts.stylegan_size, 512, 8)
+        self.latent_avg = None
+        self.load_disc()
+
+        self.pool = torch.nn.AdaptiveAvgPool2d((256, 256))
+        self.load_weights()
+        
+        # 设置训练阶段
+        if progressive_stage is not None:
+            if isinstance(progressive_stage, str):
+                progressive_stage = getattr(ProgressiveStage, progressive_stage)
+            self.encoder.set_progressive_stage(progressive_stage)
+
+    def load_disc(self):
+        print("Loading default Discriminator from ", self.opts.stylegan_weights_pkl)
+        with open(self.opts.stylegan_weights_pkl, "rb") as f:
+            ckpt = pickle.load(f)
+
+        D_original = ckpt["D"]
+        D_original = D_original.float()
+
+        self.discriminator = Discriminator(**D_original.init_kwargs)
+        self.discriminator.load_state_dict(D_original.state_dict())
+        self.discriminator.to(self.device)
+
+    def load_disc_from_ckpt(self, ckpt):
+        unique_keys = set(key.split(".")[0] for key in ckpt["state_dict"].keys())
+        if "discriminator" in unique_keys:
+            self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
+        else:
+            print("Can not find Discriminator weights in checkpoint, leave default weights.")
+
+    def load_weights(self):
+        # 检查是否有检查点文件路径
+        if self.opts.checkpoint_path and self.opts.checkpoint_path != "":
+            # 模式1：从检查点继续训练（加载所有组件）
+            print(f"继续训练模式：加载完整检查点 {self.opts.checkpoint_path}")
+            ckpt = torch.load(self.opts.checkpoint_path, map_location="cpu")
+            
+            # 加载状态字典
+            if "state_dict" in ckpt:
+                # 处理带module前缀的键（DDP模式保存的模型）
+                state_dict = {}
+                for key, val in ckpt["state_dict"].items():
+                    if key.startswith("module."):
+                        # 移除"module."前缀
+                        state_dict[key[7:]] = val
+                    else:
+                        state_dict[key] = val
+                
+                # 加载编码器权重
+                encoder_dict = {k: v for k, v in state_dict.items() if k.startswith("encoder.")}
+                if encoder_dict:
+                    # 移除"encoder."前缀
+                    encoder_dict = {k[8:]: v for k, v in encoder_dict.items()}
+                    self.encoder.load_state_dict(encoder_dict, strict=True)
+                    print("成功加载编码器权重")
+                else:
+                    print("警告：检查点中没有找到编码器权重")
+                
+                # 加载判别器权重
+                self.load_disc_from_ckpt(ckpt)
+            
+            # 从检查点加载latent_avg
+            if "latent_avg" in ckpt:
+                self.latent_avg = ckpt["latent_avg"].to(self.device)
+                print("成功加载latent_avg")
+        else:
+            # 模式2：新训练（只加载StyleGAN生成器和判别器，编码器从头训练）
+            print("新训练模式：加载预训练StyleGAN，编码器从头训练")
+            
+            # 加载StyleGAN解码器
+            try:
+                print("加载StyleGAN解码器：", self.opts.stylegan_weights)
+                ckpt = torch.load(self.opts.stylegan_weights)
+                self.decoder.load_state_dict(ckpt["g_ema"], strict=False)
+                self.latent_avg = ckpt['latent_avg'].to(self.device)
+                print("成功加载StyleGAN2解码器")
+            except Exception as e:
+                print(f"加载StyleGAN2解码器失败: {e}")
+                # 确保在加载失败时也有一个latent_avg
+                self.latent_avg = torch.zeros(512).to(self.device)
+            
+            print("编码器将从头训练")
+        
+        # 设置解码器为评估模式并冻结参数
+        self.decoder = self.decoder.eval().to(self.device)
+        toogle_grad(self.decoder, False)
+
+    def set_encoder(self):
+        # ViVFace使用E4E编码器，该编码器已添加了ss_latent输出功能
+        encoder = psp_encoders.Encoder4Editing(50, "ir_se", self.opts)
+        return encoder  # 可训练部分
+    
+    def forward(self, x, return_latents=False, randomize_noise=True, w_latent=None, ss_latent=None):
+        """
+        VIVFaceFSE的前向传播函数
+        
+        Args:
+            x: 输入图像
+            return_latents: 是否返回潜在编码
+            randomize_noise: 是否在生成过程中使用随机噪声，默认为True，与原始ViVFace保持一致
+            w_latent: 可选，直接提供的身份编码
+            ss_latent: 可选，直接提供的表情编码
+        """
+        # 确保latent_avg在正确的设备上
+        if self.latent_avg is not None and x.device != self.latent_avg.device:
+            self.latent_avg = self.latent_avg.to(x.device)
+            
+        # 调整图像尺寸
+        x = F.interpolate(x, size=(256, 256), mode="bilinear", align_corners=False)
+
+        # 如果没有提供编码，使用编码器生成
+        if w_latent is None or ss_latent is None:
+            # 使用E4E编码器生成w_latent和ss_latent
+            w_latent, ss_latent = self.encoder(x)
+            
+            # 添加平均潜在编码
+            if self.latent_avg is not None:
+                w_latent = w_latent + self.latent_avg.unsqueeze(0).repeat(w_latent.shape[0], 1, 1)
+        
+        # 使用双路径生成图像
+        images, return_dict = self.decoder(
+            [w_latent],
+            input_is_latent=True,
+            return_latents=True,
+            randomize_noise=randomize_noise,
+            ss_latent=ss_latent
+        )
+
+        del return_dict
+
+        torch.cuda.empty_cache()
+
+        if return_latents:
+            # 返回图像和两路径的潜在编码
+            return images, w_latent, ss_latent
+        return images
+        
+    def generate_from_latents(self, w_latent, ss_latent, randomize_noise=False):
+        """
+        直接从潜在编码生成图像，用于内存优化
+        
+        Args:
+            w_latent: 身份编码，形状为[batch_size, 18, 512]
+            ss_latent: 表情编码，形状为[batch_size, 18, 512]
+            randomize_noise: 是否使用随机噪声，默认为False
+            
+        Returns:
+            生成的图像
+        """
+        # 使用双路径生成图像
+        images, _ = self.decoder(
+            [w_latent],
+            input_is_latent=True,
+            return_latents=False,
+            randomize_noise=randomize_noise,
+            ss_latent=ss_latent
+        )
+        
+        # 立即清理缓存
+        torch.cuda.empty_cache()
+        
         return images
