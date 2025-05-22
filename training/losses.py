@@ -151,7 +151,7 @@ class MocoLoss(moco_loss.MocoLoss):
 @adv_losses.add_to_registry(name="adv")
 class EncoderAdvLoss:
     def __call__(self, fake_preds):
-        loss_G_adv = F.softplus(-fake_preds).mean()
+        loss_G_adv = F.softplus(-fake_preds).mean().detach()
         return loss_G_adv
 
 

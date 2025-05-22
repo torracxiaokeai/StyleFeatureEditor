@@ -1,0 +1,65 @@
+dist:
+  enabled: True
+  port: 10024           # 通信端口
+  world_size: 4
+  rank: 0
+  sync_bn: true
+  find_unused_parameters: true
+
+exp:
+  name: vivface_fse_editor
+  exp_dir: experiments
+  wandb: false
+  resume: false
+
+model:
+  method: fse_full
+  checkpoint_path: ""
+  batch_size: 8
+  workers: 2
+
+methods_args:
+  fse_full:
+    inverter_pth: "/root/avatar_project/StyleFeatureEditor/pretrained_models/sfe_inverter.pt"
+
+train:
+  train_runner: fse_editor
+  train_dis: true
+  val_step: 2000
+  log_step: 100
+  steps: 500000
+  start_step: 0
+  checkpoint_step: 1000
+  val_metrics: ["l2", "lpips", "msssim"]
+  encoder_optimizer: adam
+  disc_optimizer: adam
+  bs_used_before_adv_loss: 8
+  dis_train_start_step: 2000
+  vivface_checkpoint: "/root/avatar_project/StyleFeatureEditor/pretrained_models/iteration_40000.pt"
+  disc_edits: []
+
+data:
+  dataset_type: "vivface_edit"
+  input_train_dir: "/root/avatar_project/CelebV-HQ/train"
+  input_val_dir: "/root/avatar_project/CelebV-HQ/test"
+  special_dir: "/root/avatar_project/CelebV-HQ/test"
+  transform: "face_1024"
+
+optimizers:
+  adam:
+    lr: 0.0001
+    betas: [0.9, 0.999]
+    weight_decay: 0
+
+encoder_losses:
+  l2: 1.0
+  lpips: 0.8
+  id: 0.1
+  adv: 0.01
+
+disc_losses:
+  main:
+    coef: 1
+  r1:
+    coef: 10
+

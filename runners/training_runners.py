@@ -161,6 +161,27 @@ class BaseTrainingRunner(BaseRunner):
             # 为了兼容性，我们仍然需要设置paths
             self.paths = []
             self.special_paths = []
+        elif dataset_type == "vivface_edit":
+            from datasets.datasets import ViVFaceEditDataset
+            print("Using ViVFaceEditDataset for training and validation")
+            
+            self.train_dataset = ViVFaceEditDataset(
+                self.config.data.input_train_dir,  # 使用input_train_dir作为唯一数据源
+                None,  # 不再需要driver_dir
+                transform_dict["train"]
+            )
+            
+            # 对于测试/验证，我们仍然使用普通的ImageDataset
+            self.test_dataset = ImageDataset(
+                self.config.data.input_val_dir, transform_dict["test"]
+            )
+            
+            self.special_dataset = ImageDataset(
+                self.config.data.special_dir, transform_dict["test"]
+            )
+            
+            self.paths = self.test_dataset.paths if hasattr(self.test_dataset, 'paths') else []
+            self.special_paths = self.special_dataset.paths if hasattr(self.special_dataset, 'paths') else []
         else:
             # 默认使用普通的ImageDataset
             self.train_dataset = ImageDataset(
@@ -463,7 +484,7 @@ class BaseTrainingRunner(BaseRunner):
         # 获取批次数据
         batch = next(self.train_dataloader)
 
-        print("batch: " + str(batch))    
+        # print("batch: " + str(batch))    
         
         # 如果是字典类型，需要将每个张量移到正确的设备
         if isinstance(batch, dict):
@@ -477,7 +498,13 @@ class BaseTrainingRunner(BaseRunner):
         # 前向传播
         output = self.forward(batch)
         
-        # 计算损失
+        # =========================================
+        # ❶ 计算 encoder 相关损失（判别器不参与梯度）
+        # =========================================
+        # 先拿到判别器实例——建议放在 forward 之后立即执行
+        discriminator = self.get_model_component('discriminator')
+
+        toogle_grad(discriminator, False)         # 彻底关闭判别器梯度
         enc_loss, loss_dict = self.loss_builder.encoder_loss(output["encoder"])
         
         # 反向传播
@@ -486,34 +513,39 @@ class BaseTrainingRunner(BaseRunner):
         self.encoder_optimizer.step()
         loss_dict["enc_loss"] = float(enc_loss)
         
-        # 如果启用了判别器训练
+        # =========================================
+        # ❷ 计算并更新判别器（重新打开梯度）
+        # =========================================
         if (
             self.config.train.train_dis
             and self.global_step >= self.config.train.dis_train_start_step
         ):
-            if self.global_step == self.config.train.dis_train_start_step and (not self.config.dist.enabled or self.config.dist.rank == 0):
+            if self.global_step == self.config.train.dis_train_start_step and \
+            (not self.config.dist.enabled or self.config.dist.rank == 0):
                 print("Start training with discriminator")
-            if self.train_dataloader.batch_size != self.config.model.batch_size:
+
+            # dataloader 批次大小检查（保持你原来的逻辑）
+            if self.train_dataloader.batch_size * self.config.dist.world_size  != self.config.model.batch_size:
                 if not self.config.dist.enabled or self.config.dist.rank == 0:
-                    print(f"Changing batch size from {self.train_dataloader.batch_size} to {self.config.model.batch_size}")
+                    print(f"Changing batch size from {self.train_dataloader.batch_size}"
+                        f" to {self.config.model.batch_size}")
                 self._setup_dataloaders(self.config.model.batch_size)
-            
-            # 获取判别器并训练，处理DDP情况
-            discriminator = self.get_model_component('discriminator')
-            toogle_grad(discriminator, True)
+
+            # ——真正训练判别器——
+            toogle_grad(discriminator, True)      # 打开梯度
             discriminator.train()
-            
+
             disc_loss, disc_losses_dict = self.loss_builder.disc_loss(
-                discriminator, 
-                output["to_disc"]
-                )
+                discriminator,
+                output["to_disc"],
+            )
             loss_dict.update(disc_losses_dict)
-            
+
             self.disc_optimizer.zero_grad()
-            disc_loss.backward()
+            disc_loss.backward()                  # ← 这里才第一次标记判别器参数
             self.disc_optimizer.step()
-            
-            toogle_grad(discriminator, False)
+
+            toogle_grad(discriminator, False)     # 立即关闭，后续其他模块用不到
             discriminator.eval()
         
         # 确保latent_avg不参与反向传播
@@ -715,34 +747,37 @@ class BaseTrainingRunner(BaseRunner):
                         self.val_pics_orig.append(Image.new('RGB', (256, 256), color = 'black'))
                         self.processed_paths.append(f"img_{idx}")
 
-        # 在分布式设置中，我们需要确保所有进程完成验证
+        # 在需要使用barrier的地方，临时退出推理模式
         if self.config.dist.enabled:
-            if self.config.dist.rank == 0:
-                print(f"Rank 0 processed {len(batch_indices)} samples with indices: {batch_indices[:10]}...")
-            torch.distributed.barrier()
+            # 退出推理模式执行barrier
+            with torch.inference_mode(False):
+                if self.config.dist.rank == 0:
+                    print(f"Rank 0 processed {len(batch_indices)} samples with indices: {batch_indices[:10]}...")
+                torch.distributed.barrier()
         else:
             print(f"Processed {len(batch_indices)} samples for validation (limited from total {len(dataloader.dataset)})")
 
         metrics_dict = {}
-        if not special and (not self.config.dist.enabled or self.config.dist.rank == 0):
-            # 确保收集到的图像数量正确
-            if len(self.val_pics_res) != len(self.val_pics_orig):
-                print(f"Warning: Mismatch between val_pics_res ({len(self.val_pics_res)}) and val_pics_orig ({len(self.val_pics_orig)})")
-                # 取二者中较小的数量
-                min_count = min(len(self.val_pics_res), len(self.val_pics_orig))
-                self.val_pics_res = self.val_pics_res[:min_count]
-                self.val_pics_orig = self.val_pics_orig[:min_count]
-                
-            for metric in self.metrics:
-                from_data_arg = {
-                    "fake_data": self.val_pics_res,
-                    "inp_data": self.val_pics_orig,
-                    "paths": paths[:len(self.val_pics_res)] if len(paths) > 0 else ["img_" + str(i) for i in range(len(self.val_pics_res))],  # 确保路径数量匹配
-                }
-                _, metric_mean, _ = metric(
-                    None, None, out_path=None, from_data=from_data_arg
-                )
-                metrics_dict[metric.get_name()] = metric_mean
+        with torch.no_grad():
+            if not special and (not self.config.dist.enabled or self.config.dist.rank == 0):
+                # 确保收集到的图像数量正确
+                if len(self.val_pics_res) != len(self.val_pics_orig):
+                    print(f"Warning: Mismatch between val_pics_res ({len(self.val_pics_res)}) and val_pics_orig ({len(self.val_pics_orig)})")
+                    # 取二者中较小的数量
+                    min_count = min(len(self.val_pics_res), len(self.val_pics_orig))
+                    self.val_pics_res = self.val_pics_res[:min_count]
+                    self.val_pics_orig = self.val_pics_orig[:min_count]
+                    
+                for metric in self.metrics:
+                    from_data_arg = {
+                        "fake_data": self.val_pics_res,
+                        "inp_data": self.val_pics_orig,
+                        "paths": paths[:len(self.val_pics_res)] if len(paths) > 0 else ["img_" + str(i) for i in range(len(self.val_pics_res))],  # 确保路径数量匹配
+                    }
+                    _, metric_mean, _ = metric(
+                        None, None, out_path=None, from_data=from_data_arg
+                    )
+                    metrics_dict[metric.get_name()] = metric_mean
 
         self.to_train()
         return metrics_dict
@@ -781,16 +816,28 @@ class BaseTrainingRunner(BaseRunner):
             if self.config.dist.sync_bn:
                 self.method = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.method)
             
-            # 包装模型为DDP
+            # 完全禁用DDP的缓冲区广播
             self.method = torch.nn.parallel.DistributedDataParallel(
                 self.method,
                 device_ids=[self.config.dist.rank],
                 output_device=self.config.dist.rank,
-                find_unused_parameters=self.config.dist.find_unused_parameters
+                find_unused_parameters=self.config.dist.find_unused_parameters,
+                broadcast_buffers=False  # 禁用缓冲区广播
             )
 
     def _setup_latent_editor(self):
         # 基础实现为空，子类可以根据需要覆盖此方法
+        pass
+
+    def check_for_progressive_training_update(self, is_resume_from_ckpt=False):
+        """
+        检查是否需要更新渐进式训练阶段
+        
+        Args:
+            is_resume_from_ckpt: 是否从检查点恢复训练的检查
+        """
+        # FSEEditorTrainingRunner不使用渐进式训练
+        # 这个方法只是为了兼容BaseTrainingRunner中的train_step方法
         pass
 
 
@@ -839,104 +886,149 @@ class FSEInverterTrainingRunner(BaseTrainingRunner):
         return output
 
     def _run_on_batch(self, inputs):
-        # 检查输入是否为字典格式（ViVFaceDataset返回的格式）
-        if isinstance(inputs, dict):
-            # 对于验证，我们只使用source图像
-            if 'source' in inputs:
-                # 确保数据在正确的设备上
-                source = inputs['source']
-                if isinstance(source, torch.Tensor) and source.device != self.device:
-                    source = source.to(self.device)
-                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
-                return result_batch
+        # 确保输入是字典格式
+        if not isinstance(inputs, dict):
+            # 兼容旧格式，将单一张量转换为字典格式
+            inputs = {'source': inputs, 'driver': inputs}
         
-        # 处理传统格式的输入（普通图像张量）
         # 确保数据在正确的设备上
-        if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
-            inputs = inputs.to(self.device)
-        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
+        if 'source' in inputs:
+            source = inputs['source']
+            if isinstance(source, torch.Tensor) and source.device != self.device:
+                inputs['source'] = source.to(self.device)
+        
+        if 'driver' in inputs:
+            driver = inputs['driver']
+            if isinstance(driver, torch.Tensor) and driver.device != self.device:
+                inputs['driver'] = driver.to(self.device)
+        
+        # 调用forward方法处理输入
+        result_batch = self.forward(inputs)
         return result_batch
 
 
 @training_runners.add_to_registry(name="fse_editor")
 class FSEEditorTrainingRunner(BaseTrainingRunner):
-    def forward(self, x):
+    def __init__(self, *args, **kwargs):
+        super(FSEEditorTrainingRunner, self).__init__(*args, **kwargs)
+        
+    def setup(self):
+        super().setup()
+        # 加载ViVFace模型，不更新梯度
+        if not hasattr(self, 'vivface_model'):
+            self.vivface_model = self._load_vivface_model()
+            
+        # 初始化渐进式训练设置
+        self.enable_progressive_training = False
+        if hasattr(self.config.train, "enable_progressive_training"):
+            self.enable_progressive_training = self.config.train.enable_progressive_training
+            
+        # 初始化渐进式训练步骤
+        self.progressive_steps = []
+        if hasattr(self.config.train, "progressive_steps"):
+            self.progressive_steps = self.config.train.progressive_steps
+        
+    def _load_vivface_model(self):
+        # 加载预训练的ViVFace模型
+        from models.vivface.psp_identity_related import pSp
+        import torch
+        import argparse
+        
+        # 加载ViVFace预训练检查点
+        checkpoint_path = self.config.train.vivface_checkpoint
+        print(f'从ViVFace检查点加载模型: {checkpoint_path}')
+        ckpt = torch.load(checkpoint_path, map_location='cpu')
+        
+        # 创建模型配置
+        opts = ckpt['opts']
+        opts['checkpoint_path'] = checkpoint_path
+        opts['device'] = self.device
+        opts = argparse.Namespace(**opts)
+        
+        # 创建pSp模型
+        vivface_model = pSp(opts)
+        vivface_model.eval()  # 设为评估模式
+        vivface_model = vivface_model.to(self.device)
+        
+        # 冻结参数
+        for param in vivface_model.parameters():
+            param.requires_grad = False
+            
+        return vivface_model
+    
+    def forward(self, inputs):
+        # 假设inputs是一个字典，包含source和driver
+        if not isinstance(inputs, dict) or 'source' not in inputs or 'driver' not in inputs:
+            raise ValueError("输入必须是包含'source'和'driver'键的字典")
+            
+        # 获取源图像和驱动图像
+        x = inputs['source']  # 源图像S
+        driver = inputs['driver']  # 驱动图像D2
+
         # 获取原始模型，处理DDP包装情况
         base_model = self.get_base_model()
-        
-        # get inversion batch
+
+        # 第一步：获取原始图像的反演结果
         y_hat_inv, w, fused_feat, w_feat = self.method(x, return_latents=True)
-        # w变量未被使用，可以立即删除
-        del w, fused_feat, w_feat
-
-        # get editing batch
+        del w, fused_feat, w_feat  # 释放不需要的变量
+        
+        # 第二步：使用ViVFace提取身份和表情特征
         with torch.no_grad():
-            # sample X_E as training input and X'_E as training target
-            d, strenght = get_random_edit()
-            
+            # 对源图像和驱动图像进行大小调整
             x_resh = F.interpolate(x, size=(256, 256), mode="bilinear", align_corners=False)
-
-            # 使用e4e编码器生成潜在编码
-            w_e4e = base_model.e4e_encoder(x_resh)
-            w_e4e = w_e4e + base_model.latent_avg
+            driver_resh = F.interpolate(driver, size=(256, 256), mode="bilinear", align_corners=False)
+            
+            # 从源图像提取w向量（身份特征）和ss向量（表情特征）
+            S_latent = self.vivface_model.forward(x_resh, return_latents=True, return_images=False)
+            w_S = S_latent['w_latent']
+            ss_S = S_latent['ss_latent']
+            
+            # 从驱动图像提取ss向量（表情特征）
+            D2_latent = self.vivface_model.forward(driver_resh, return_latents=True, return_images=False)
+            ss_D2 = D2_latent['ss_latent']
+            
+            # 使用身份和表情特征生成编辑后的图像
             x_E, fx_e4e = base_model.decoder(
-                [w_e4e],
+                [w_S],
                 input_is_latent=True,
                 randomize_noise=False,
-                return_latents=False,
-                return_features=True
+                return_features=True,
+                ss_latent=ss_S  # 使用源图像的ss特征
             )
-
-            # 第二阶段-第一部分-编辑阶段
-            # get_edited_latent尤其要进行更换
-            edited_w_e4e = self.get_edited_latent(w_e4e, d, [strenght])
-            # w_e4e已不再使用
-            del w_e4e
+            del ss_S
             
-            if isinstance(edited_w_e4e, tuple):
-                # stylespace case
-                y_E, fy_e4e = base_model.decoder(
-                    edited_w_e4e, 
-                    is_stylespace=True, 
-                    input_is_latent=True,
-                    randomize_noise=False,
-                    return_features=True
-                )
-            else:
-                edited_w_e4e = torch.cat(edited_w_e4e, dim=0)
-                y_E, fy_e4e = base_model.decoder(
-                    [edited_w_e4e], 
-                    is_stylespace=False,
-                    input_is_latent=True,
-                    randomize_noise=False,
-                    return_features=True
-                )
-            # edited_w_e4e已不再使用
-            del edited_w_e4e
-
-            y_E_256 = F.interpolate(y_E, size=(256, 256), mode="bilinear", align_corners=False) # X'_E
-            x_E_256 = F.interpolate(x_E, size=(256, 256), mode="bilinear", align_corners=False) # X_E
-            # x_E已不再使用
-            del x_E
+            # 使用w_S和ss_D2生成编辑后的图像
+            y_E, fy_e4e = base_model.decoder(
+                [w_S],
+                input_is_latent=True,
+                randomize_noise=False,
+                return_features=True,
+                ss_latent=ss_D2  # 使用驱动图像的表情特征
+            )
+            
+            # 计算特征差异
+            y_E_256 = F.interpolate(y_E, size=(256, 256), mode="bilinear", align_corners=False)
+            x_E_256 = F.interpolate(x_E, size=(256, 256), mode="bilinear", align_corners=False)
+            del x_E, y_E_256
             
             delta = fx_e4e[9] - fy_e4e[9]
-            # fx_e4e和fy_e4e已不再使用
             del fx_e4e, fy_e4e
-            torch.cuda.empty_cache()  # 释放一部分显存
-
-            if d in self.config.train.disc_edits:
+            torch.cuda.empty_cache()
+            
+            # 处理鉴别器编辑（保持原有逻辑的兼容）
+            if hasattr(self.config.train, 'disc_edits') and len(self.config.train.disc_edits) > 0:
                 x_E_256 = torch.cat([x_E_256, x_resh], dim=0)
                 delta = torch.cat([delta, delta], dim=0)
             
-            # 第二阶段-第二部分
             # 使用特征提取backbone
             w_x_E, x_E_predicted_feats = base_model.inverter.fs_backbone(x_E_256)
             w_x_E = w_x_E + base_model.latent_avg
             
-            w_x_E_edited = self.get_edited_latent(w_x_E, d, [strenght])
-            is_stylespace = isinstance(w_x_E_edited, tuple)
-            if not is_stylespace:
-                w_x_E_edited = [torch.cat(w_x_E_edited, dim=0)]
+            # 使用ss_D2编辑w_x_E
+            # 注意这里不再使用随机编辑方向，而是使用ss_D2作为编辑方向
+            w_x_E_edited = [w_x_E]  # 使用原始w作为基础
+            # 将StyleSpace格式标记为True
+            is_stylespace = True
             
             # 使用解码器获取特征
             _, x_E_w_feats = base_model.decoder(
@@ -947,53 +1039,49 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 randomize_noise=False,
                 early_stop=64
             )
-            # w_x_E已不再使用
             del w_x_E
             
-            x_E_w_feat = x_E_w_feats[9] 
-            # x_E_w_feats除了索引9外已不再使用
+            x_E_w_feat = x_E_w_feats[9]
             del x_E_w_feats
             
             to_fuser = torch.cat([x_E_predicted_feats, x_E_w_feat], dim=1)
-            # x_E_predicted_feats和x_E_w_feat已不再使用
             del x_E_predicted_feats, x_E_w_feat
             
             # 融合特征
             x_E_fused_feat = base_model.inverter.fuser(to_fuser)
-            # to_fuser已不再使用
             del to_fuser
         
-        # delta的使用在这里
+        # 使用delta特征进行编辑
         to_feature_editor = torch.cat([x_E_fused_feat, delta], dim=1)
-        # x_E_fused_feat和delta已不再使用
         del x_E_fused_feat, delta
         
         # 使用编码器生成编辑特征
         x_E_edited_feat = base_model.encoder(to_feature_editor)
-        # to_feature_editor已不再使用
         del to_feature_editor
         
         x_E_edited_feats = [None] * 9 + [x_E_edited_feat] + [None] * (17 - 9)
-        # x_E_edited_feat已包含在列表中，可以删除原引用
         del x_E_edited_feat
         
-        # 在最耗内存的decoder调用前释放一些内存
         torch.cuda.empty_cache()
-
-        # 生成最终的编辑图像
+        
+        # 使用ViVFace模式而不是StyleSpace模式
+        is_stylespace = False
+        
+        # 生成最终的编辑图像，使用ss_D2作为StyleSpace输入
         y_hat_edit, _ = base_model.decoder(
             w_x_E_edited,
             input_is_latent=True,
             new_features=x_E_edited_feats,
             feature_scale=1.0,
             is_stylespace=is_stylespace,
-            randomize_noise=False
+            randomize_noise=False,
+            ss_latent=ss_D2  # 使用驱动图像的表情特征
         )
         
-        # w_x_E_edited和x_E_edited_feats已不再使用
         del w_x_E_edited, x_E_edited_feats
         
-        # 损失计算
+        # 以下部分保持不变，进行损失计算
+        # (后续代码保持原样)
         bs = x_resh.size(0)
         output = {"encoder": {}, "to_disc": {}}
         use_adv_loss = (
@@ -1018,6 +1106,9 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
             assert y_hat_edit.size(0) == bs * 2
             y_hat_edit = y_hat_edit[:bs]
 
+        # 确保x和y_E具有相同的空间尺寸
+        # x经过了pool处理（在最后），所以我们需要确保y_E也经过相同处理
+        # 将y_E保存到一个临时变量，以便我们可以在连接后删除原始变量
         x = torch.cat([x, y_E], dim=0)
         # y_E已不再使用
         del y_E
@@ -1046,15 +1137,26 @@ class FSEEditorTrainingRunner(BaseTrainingRunner):
                 source = inputs['source']
                 if isinstance(source, torch.Tensor) and source.device != self.device:
                     source = source.to(self.device)
-                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
+                result_batch = self.method(source)  # 移除randomize_noise参数
                 return result_batch
         
         # 处理传统格式的输入（普通图像张量）
         # 确保数据在正确的设备上
         if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
             inputs = inputs.to(self.device)
-        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
+        result_batch = self.method(inputs)  # 移除randomize_noise参数
         return result_batch
+
+    def check_for_progressive_training_update(self, is_resume_from_ckpt=False):
+        """
+        检查是否需要更新渐进式训练阶段
+        
+        Args:
+            is_resume_from_ckpt: 是否从检查点恢复训练的检查
+        """
+        # FSEEditorTrainingRunner不使用渐进式训练
+        # 这个方法只是为了兼容BaseTrainingRunner中的train_step方法
+        pass
 
 
 @training_runners.add_to_registry(name="vivface_training")
@@ -1269,14 +1371,14 @@ class ViVFaceTrainingRunner(BaseTrainingRunner):
                 source = inputs['source']
                 if isinstance(source, torch.Tensor) and source.device != self.device:
                     source = source.to(self.device)
-                result_batch = self.method(source, randomize_noise=False)  # 推理时使用确定性噪声
+                result_batch = self.method(source)  # 移除randomize_noise参数
                 return result_batch
         
         # 处理传统格式的输入（普通图像张量）
         # 确保数据在正确的设备上
         if isinstance(inputs, torch.Tensor) and inputs.device != self.device:
             inputs = inputs.to(self.device)
-        result_batch = self.method(inputs, randomize_noise=False)  # 推理时使用确定性噪声
+        result_batch = self.method(inputs)  # 移除randomize_noise参数
         return result_batch
     
     def _setup_loss(self):

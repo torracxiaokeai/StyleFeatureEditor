@@ -1115,7 +1115,6 @@ class Discriminator(torch.nn.Module):
     ):
         super().__init__()
         self.c_dim = c_dim
-        print(img_resolution)
         self.img_resolution = img_resolution
         self.img_resolution_log2 = int(np.log2(img_resolution))
         self.img_channels = img_channels
@@ -1174,80 +1173,93 @@ class Discriminator(torch.nn.Module):
     def forward(self, img, c, **block_kwargs):
         # 获取输入图像的实际分辨率
         _, _, h, w = img.shape
-        input_resolution = min(h, w)
         
-        # 初始化x
-        x = None
-        
-        # 筛选适合当前输入分辨率的block_resolutions
-        # 如果输入分辨率256，只处理256及以下的分辨率块
-        valid_resolutions = [res for res in self.block_resolutions if res <= input_resolution]
-        
-        # 如果没有有效的分辨率块，则从第一个block开始
-        if not valid_resolutions and len(self.block_resolutions) > 0:
-            # 使用最小的分辨率块
-            start_res = self.block_resolutions[-1]
-            # 上采样输入图像至最小支持的分辨率
-            if input_resolution < start_res:
-                img = torch.nn.functional.interpolate(
-                    img, size=(start_res, start_res), 
-                    mode='bilinear', align_corners=False
-                )
-            valid_resolutions = [start_res]
-        
-        # 如果输入的分辨率不是设计分辨率的一部分，但大于最小分辨率
-        # 找到小于输入分辨率的最大有效分辨率
-        if not valid_resolutions and input_resolution > min(self.block_resolutions):
-            valid_res = None
-            for res in sorted(self.block_resolutions, reverse=True):
-                if res <= input_resolution:
-                    valid_res = res
-                    break
-            if valid_res:
-                img = torch.nn.functional.interpolate(
-                    img, size=(valid_res, valid_res), 
-                    mode='bilinear', align_corners=False
-                )
-                valid_resolutions = [valid_res]
-                
-        # 确保valid_resolutions不为空
-        if not valid_resolutions and len(self.block_resolutions) > 0:
-            # 使用第一个分辨率块
-            valid_resolutions = [self.block_resolutions[0]]
-            # 调整图像大小以匹配
-            img = torch.nn.functional.interpolate(
-                img, size=(valid_resolutions[0], valid_resolutions[0]), 
-                mode='bilinear', align_corners=False
-            )
-        
-        # 从有效的分辨率块开始处理
-        for i, res in enumerate(valid_resolutions):
-            block = getattr(self, f"b{res}")
-            
-            # 特殊处理：如果是第一个block且x为None，并且使用resnet架构
-            # 需要先通过fromrgb层处理图像
-            if i == 0 and x is None and hasattr(block, 'architecture') and block.architecture == 'resnet':
-                # 如果block没有fromrgb属性，我们需要手动创建一个临时的fromrgb层
-                if not hasattr(block, 'fromrgb'):
-                    # 创建一个临时的fromrgb层
-                    channels_dict = {
-                        res: min(32768 // res, 512) for res in self.block_resolutions + [4]
-                    }
-                    tmp_channels = channels_dict[res]
-                    from_rgb = Conv2dLayer(
-                        self.img_channels, tmp_channels, kernel_size=1, 
-                        activation='lrelu', conv_clamp=None
-                    ).to(img.device)
-                    # 应用fromrgb
-                    x = from_rgb(img)
-                else:
-                    # 使用block的fromrgb
-                    x = block.fromrgb(img)
-            
-            x, img = block(x, img, **block_kwargs)
+        if h == 1024:
+            x = None
+            for res in self.block_resolutions:
+                block = getattr(self, f"b{res}")
+                x, img = block(x, img, **block_kwargs)
 
-        cmap = None
-        if self.c_dim > 0:
-            cmap = self.mapping(None, c)
-        x = self.b4(x, img, cmap)
-        return x
+            cmap = None
+            if self.c_dim > 0:
+                cmap = self.mapping(None, c)
+            x = self.b4(x, img, cmap)
+            return x
+        else:
+            input_resolution = min(h, w)
+            
+            # 初始化x
+            x = None
+            
+            # 筛选适合当前输入分辨率的block_resolutions
+            # 如果输入分辨率256，只处理256及以下的分辨率块
+            valid_resolutions = [res for res in self.block_resolutions if res <= input_resolution]
+            
+            # 如果没有有效的分辨率块，则从第一个block开始
+            if not valid_resolutions and len(self.block_resolutions) > 0:
+                # 使用最小的分辨率块
+                start_res = self.block_resolutions[-1]
+                # 上采样输入图像至最小支持的分辨率
+                if input_resolution < start_res:
+                    img = torch.nn.functional.interpolate(
+                        img, size=(start_res, start_res), 
+                        mode='bilinear', align_corners=False
+                    )
+                valid_resolutions = [start_res]
+            
+            # 如果输入的分辨率不是设计分辨率的一部分，但大于最小分辨率
+            # 找到小于输入分辨率的最大有效分辨率
+            if not valid_resolutions and input_resolution > min(self.block_resolutions):
+                valid_res = None
+                for res in sorted(self.block_resolutions, reverse=True):
+                    if res <= input_resolution:
+                        valid_res = res
+                        break
+                if valid_res:
+                    img = torch.nn.functional.interpolate(
+                        img, size=(valid_res, valid_res), 
+                        mode='bilinear', align_corners=False
+                    )
+                    valid_resolutions = [valid_res]
+                    
+            # 确保valid_resolutions不为空
+            if not valid_resolutions and len(self.block_resolutions) > 0:
+                # 使用第一个分辨率块
+                valid_resolutions = [self.block_resolutions[0]]
+                # 调整图像大小以匹配
+                img = torch.nn.functional.interpolate(
+                    img, size=(valid_resolutions[0], valid_resolutions[0]), 
+                    mode='bilinear', align_corners=False
+                )
+            
+            # 从有效的分辨率块开始处理
+            for i, res in enumerate(valid_resolutions):
+                block = getattr(self, f"b{res}")
+                
+                # 特殊处理：如果是第一个block且x为None，并且使用resnet架构
+                # 需要先通过fromrgb层处理图像
+                if i == 0 and x is None and hasattr(block, 'architecture') and block.architecture == 'resnet':
+                    # 如果block没有fromrgb属性，我们需要手动创建一个临时的fromrgb层
+                    if not hasattr(block, 'fromrgb'):
+                        # 创建一个临时的fromrgb层
+                        channels_dict = {
+                            res: min(32768 // res, 512) for res in self.block_resolutions + [4]
+                        }
+                        tmp_channels = channels_dict[res]
+                        from_rgb = Conv2dLayer(
+                            self.img_channels, tmp_channels, kernel_size=1, 
+                            activation='lrelu', conv_clamp=None
+                        ).to(img.device)
+                        # 应用fromrgb
+                        x = from_rgb(img)
+                    else:
+                        # 使用block的fromrgb
+                        x = block.fromrgb(img)
+                
+                x, img = block(x, img, **block_kwargs)
+
+            cmap = None
+            if self.c_dim > 0:
+                cmap = self.mapping(None, c)
+            x = self.b4(x, img, cmap)
+            return x

@@ -23,6 +23,34 @@ sys.path.append("./utils")
 methods_registry = ClassRegistry()
 
 
+# 添加全局辅助函数，用于处理module前缀问题
+def get_keys_with_prefix_handling(ckpt, name):
+    """处理状态字典中可能带有module前缀的键名
+    
+    Args:
+        ckpt: 检查点字典
+        name: 键名前缀（如"encoder"、"inverter"等）
+        
+    Returns:
+        处理后的状态字典，移除了多余的前缀
+    """
+    # 先尝试使用原来的get_keys函数获取状态字典
+    state_dict = get_keys(ckpt, name)
+    
+    # 如果状态字典为空或加载失败，可能是因为键名带有module前缀
+    if not state_dict and 'state_dict' in ckpt:
+        result = {}
+        prefix = f'module.{name}.'
+        for key, value in ckpt['state_dict'].items():
+            # 处理带有module前缀的键
+            if key.startswith(prefix):
+                new_key = key[len(prefix):]  # 移除"module.encoder."或"module.inverter."等前缀
+                result[new_key] = value
+        return result
+    
+    return state_dict
+
+
 @methods_registry.add_to_registry("fse_full", stop_args=("self", "checkpoint_path"))
 class FSEFull(nn.Module):
     def __init__(self,
@@ -65,19 +93,62 @@ class FSEFull(nn.Module):
         self.discriminator.to(self.device)
 
     def load_disc_from_ckpt(self, ckpt):
+        # 检查是否有module.discriminator前缀的键
+        has_module_prefix = any(key.startswith("module.discriminator.") for key in ckpt["state_dict"].keys())
+        
+        # 检查是否有discriminator前缀的键
         unique_keys = set(key.split(".")[0] for key in ckpt["state_dict"].keys())
-        if "discriminator" in unique_keys:
+        has_disc_prefix = "discriminator" in unique_keys
+        
+        # 情况1: 有module.discriminator前缀
+        if has_module_prefix:
+            print("检测到module.discriminator前缀，使用前缀处理方式加载判别器")
+            disc_state_dict = get_keys_with_prefix_handling(ckpt, "discriminator")
+            try:
+                self.discriminator.load_state_dict(disc_state_dict, strict=True)
+                print("成功加载判别器权重")
+            except Exception as e:
+                print(f"加载判别器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.discriminator.load_state_dict(disc_state_dict, strict=False)
+        
+        # 情况2: 有discriminator前缀（原始方式）
+        elif has_disc_prefix:
+            print("检测到discriminator前缀，使用原始方式加载判别器")
             self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
+            print("成功加载判别器权重")
+        
+        # 情况3: 两种前缀都没有找到
         else:
-            print("Can not find Discriminator weights in checkpoint, leave default weights.")
+            print("未找到判别器权重，保留默认权重")
 
     def load_weights(self):
         if self.opts.checkpoint_path != "":
             print(f"Loading from checkpoint: {self.opts.checkpoint_path}")
             ckpt = torch.load(self.opts.checkpoint_path, map_location="cpu")
             self.load_disc_from_ckpt(ckpt)
-            self.encoder.load_state_dict(get_keys(ckpt, "encoder"), strict=True)
-            self.inverter.load_state_dict(get_keys(ckpt, "inverter"), strict=True)
+            
+            # 使用修正后的函数调用方式
+            encoder_state_dict = get_keys_with_prefix_handling(ckpt, "encoder")
+            inverter_state_dict = get_keys_with_prefix_handling(ckpt, "inverter")
+            
+            try:
+                self.encoder.load_state_dict(encoder_state_dict, strict=True)
+                print("成功加载编码器权重")
+            except Exception as e:
+                print(f"加载编码器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.encoder.load_state_dict(encoder_state_dict, strict=False)
+            
+            # ckpt = torch.load(self.inverter_pth, map_location="cpu")
+            # self.inverter.load_state_dict(get_keys(ckpt, "encoder"), strict=True)
+            try:
+                self.inverter.load_state_dict(inverter_state_dict, strict=True)
+                print("成功加载反转器权重")
+            except Exception as e:
+                print(f"加载反转器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.inverter.load_state_dict(inverter_state_dict, strict=False)
         else:
             print(f"Loading Discriminator and Inverter from Inverter checkpoint: {self.inverter_pth}")
             ckpt = torch.load(self.inverter_pth, map_location="cpu")
@@ -94,10 +165,9 @@ class FSEFull(nn.Module):
         self.decoder = self.decoder.eval().to(self.device)
         toogle_grad(self.decoder, False)
 
-        print("Loading E4E from", self.opts.e4e_path)
-        ckpt = torch.load(self.opts.e4e_path, map_location="cpu")
-        self.e4e_encoder.load_state_dict(get_keys(ckpt, "encoder"), strict=True)
-        self.e4e_encoder = self.e4e_encoder.eval().to(self.device)
+        # 不加载E4E预训练模型
+        print("Skip loading E4E pretrained model")
+        self.e4e_encoder = self.e4e_encoder.to(self.device)
         toogle_grad(self.e4e_encoder, False)
 
         # 不加载编码器权重，从头训练

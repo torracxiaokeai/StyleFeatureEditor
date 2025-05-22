@@ -37,6 +37,8 @@ class DataArgs:
     input_train_dir: str = MISSING
     input_val_dir: str = MISSING
     dataset_type: str = "ffhq"
+    source_dir: str = MISSING
+    driver_dir: str = MISSING
 
 
 @args.add_to_registry("train")
@@ -65,6 +67,7 @@ class TrainingArgs:
     progressive_steps: List[int] = field(
         default_factory=lambda: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000]
     )
+    vivface_checkpoint: str = ""
 
 
 @args.add_to_registry("model")

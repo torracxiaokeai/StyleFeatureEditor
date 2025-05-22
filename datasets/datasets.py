@@ -235,3 +235,89 @@ class MetricsDataDataset(Dataset):
             target_im = self.transform(target_im)
 
         return target_im, fake_im
+
+
+class ViVFaceEditDataset(Dataset):
+    def __init__(self, source_folder, driver_folder=None, transform=None):
+        """
+        初始化ViVFaceEditDataset
+        
+        Args:
+            source_folder: 主训练集文件夹，包含按身份ID组织的子文件夹
+            driver_folder: 未使用，为了兼容性保留
+            transform: 图像转换函数
+        """
+        self.transform = transform
+        
+        # 获取所有身份子文件夹
+        self.identity_folders = []
+        for item in os.listdir(source_folder):
+            item_path = os.path.join(source_folder, item)
+            if os.path.isdir(item_path):
+                self.identity_folders.append(item_path)
+        
+        if len(self.identity_folders) < 2:
+            raise ValueError(f"训练集目录 {source_folder} 中至少需要2个身份子文件夹")
+            
+        # 为每个身份文件夹获取图像文件
+        self.identity_images = {}
+        total_images = 0
+        
+        for folder in self.identity_folders:
+            images = self._get_image_files(folder)
+            if images:  # 只存储包含图像的文件夹
+                identity_name = os.path.basename(folder)
+                self.identity_images[identity_name] = images
+                total_images += len(images)
+        
+        # 过滤掉没有图像的身份
+        self.identity_list = list(self.identity_images.keys())
+        if len(self.identity_list) < 2:
+            raise ValueError(f"训练集目录中至少需要2个包含图像的身份子文件夹")
+            
+        print(f"ViVFaceEditDataset: 加载了 {len(self.identity_list)} 个身份，共 {total_images} 张图像")
+        
+        # 为了与数据加载器兼容，我们将数据集大小设置为身份数的平方
+        # 这样可以确保有足够多的不同身份组合
+        self.dataset_size = len(self.identity_list) * 10
+        
+    def _get_image_files(self, folder):
+        """递归获取目录中的所有图像文件"""
+        image_files = []
+        
+        def is_image_file(filename):
+            return filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff'))
+        
+        # 处理给定的根目录
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                if is_image_file(file):
+                    image_files.append(os.path.join(root, file))
+        
+        return sorted(image_files)
+        
+    def __len__(self):
+        return self.dataset_size
+        
+    def __getitem__(self, idx):
+        # 随机选择两个不同的身份
+        source_identity, driver_identity = random.sample(self.identity_list, 2)
+        
+        # 从每个身份中随机选择一张图像
+        source_img_path = random.choice(self.identity_images[source_identity])
+        driver_img_path = random.choice(self.identity_images[driver_identity])
+        
+        # 加载图像
+        source_img = Image.open(source_img_path).convert('RGB')
+        driver_img = Image.open(driver_img_path).convert('RGB')
+        
+        if self.transform:
+            source_img = self.transform(source_img)
+            driver_img = self.transform(driver_img)
+        
+        return {
+            'source': source_img, 
+            'driver': driver_img,
+            'source_identity': source_identity,
+            'driver_identity': driver_identity
+        }
