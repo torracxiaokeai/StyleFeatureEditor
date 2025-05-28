@@ -1,0 +1,204 @@
+wandb_version: 1
+
+exp:
+  desc: null
+  value:
+    config_dir: configs
+    config: fse_inverter_train.yaml
+    exp_dir: ./experiments
+    name: fse_inverter_train
+    seed: 42
+    root: .
+    wandb: true
+    wandb_project: sfe
+    domain: human_faces
+    resume: false
+data:
+  desc: null
+  value:
+    special_dir: /root/avatar_project/CelebV-HQ/test
+    transform: face_1024
+    input_train_dir: /root/avatar_project/CelebV-HQ/train
+    input_val_dir: /root/avatar_project/CelebV-HQ/test
+    dataset_type: ffhq
+    source_dir: ???
+    driver_dir: ???
+train:
+  desc: null
+  value:
+    train_runner: fse_inverter
+    encoder_optimizer: ranger
+    disc_optimizer: ranger
+    resume_path: ''
+    val_metrics:
+    - l2
+    - lpips
+    - id
+    start_step: 0
+    steps: 120000
+    log_step: 200
+    checkpoint_step: 1000
+    val_step: 1000
+    train_dis: true
+    dis_train_start_step: 45000
+    bs_used_before_adv_loss: 8
+    disc_edits: []
+    progressive_stage: WTraining
+    enable_progressive_training: false
+    progressive_steps:
+    - 0
+    - 2000
+    - 4000
+    - 6000
+    - 8000
+    - 10000
+    - 12000
+    - 14000
+    - 16000
+    - 18000
+    - 20000
+    - 22000
+    - 24000
+    - 26000
+    - 28000
+    - 30000
+    - 32000
+    - 34000
+    vivface_checkpoint: ''
+model:
+  desc: null
+  value:
+    method: fse_inverter
+    device: '0'
+    batch_size: 4
+    workers: 2
+    checkpoint_path: ''
+encoder_losses:
+  desc: null
+  value:
+    l2: 1.0
+    lpips: 0.8
+    lpips_scale: 0.0
+    id: 0.1
+    moco: 0.0
+    adv: 0.01
+    feat_rec: 0.01
+    feat_rec_l1: 0.0
+    l2_latent: 0.0
+    id_vit: 0.0
+    vivface_self_rec: 0.0
+    vivface_reenact: 0.0
+    vivface_w_consistency: 0.0
+    vivface_ss_consistency: 0.0
+    vivface_ss_regularization: 0.0
+    vivface_id: 0.0
+    vivface_delta: 0.0
+dist:
+  desc: null
+  value:
+    enabled: true
+    port: 12345
+    sync_bn: true
+    find_unused_parameters: true
+    world_size: 4
+    rank: 0
+methods_args:
+  desc: null
+  value:
+    fse_inverter:
+      device: cuda:0
+      paths:
+        psp_path: pretrained_models/psp_ffhq_encode.pt
+        e4e_path: pretrained_models/e4e_ffhq_encode.pt
+        farl_path: pretrained_models/face_parsing.farl.lapa.main_ema_136500_jit191.pt
+        mobile_net_pth: pretrained_models/mobilenet0.25_Final.pth
+        ir_se50_path: pretrained_models/model_ir_se50.pth
+        stylegan_weights: pretrained_models/stylegan2-ffhq-config-f.pt
+        stylegan_car_weights: pretrained_models/stylegan2-car-config-f-new.pkl
+        stylegan_weights_pkl: pretrained_models/stylegan2-ffhq-config-f.pkl
+        arcface_model_path: pretrained_models/iresnet50-7f187506.pth
+        moco: pretrained_models/moco_v2_800ep_pretrain.pt
+        curricular_face_path: pretrained_models/CurricularFace_Backbone.pth
+        mtcnn: pretrained_models/mtcnn
+        landmark: pretrained_models/79999_iter.pth
+disc_losses:
+  desc: null
+  value:
+    main:
+      coef: 1.0
+    r1:
+      coef: 10.0
+      hyper_d_reg_every: 16
+optimizers:
+  desc: null
+  value:
+    adam:
+      lr: 0.0001
+      betas:
+      - 0.9
+      - 0.999
+      eps: 1.0e-08
+      weight_decay: 0
+      amsgrad: false
+    ranger:
+      lr: 0.0001
+      alpha: 0.5
+      k: 6
+      N_sma_threshhold: 5
+      betas:
+      - 0.95
+      - 0.999
+      eps: 1.0e-05
+      weight_decay: 0
+      use_gc: true
+      gc_conv_only: false
+metrics:
+  desc: null
+  value:
+    lpips:
+      batch_size: 4
+      n_workers: 4
+    id_vit:
+      batch_size: 4
+      n_workers: 4
+    l2:
+      batch_size: 4
+      n_workers: 4
+    fid:
+      batch_size: 64
+      device: cuda
+      dims: 2048
+      n_workers: 8
+    msssim: {}
+    id:
+      n_threads: 8
+_wandb:
+  desc: null
+  value:
+    python_version: 3.10.16
+    cli_version: 0.15.2
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1747977479.417965
+    t:
+      1:
+      - 1
+      - 41
+      - 51
+      - 55
+      2:
+      - 1
+      - 41
+      - 51
+      - 55
+      3:
+      - 13
+      - 14
+      - 16
+      - 23
+      4: 3.10.16
+      5: 0.15.2
+      8:
+      - 5
+      - 9

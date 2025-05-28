@@ -2,13 +2,57 @@ train:
   train_runner: fse_inverter
   train_dis: True
   dis_train_start_step: 45000
+  enable_progressive_training: false  # FSE Inverter不使用渐进式训练
+  steps: 120000                      # 总训练步数
+  val_step: 1000                     # 验证间隔
+  checkpoint_step: 1000              # 保存间隔
+  log_step: 200                       # 日志记录间隔
+  start_step: 0                      # 起始步数
+  encoder_optimizer: ranger          # 编码器优化器
+  disc_optimizer: ranger             # 判别器优化器
+  bs_used_before_adv_loss: 8         # 对抗损失前使用的批大小
+  val_metrics: ["l2", "lpips", "fid"]  # 验证指标f
 
+# 分布式训练配置
+dist:
+  enabled: true          # 启用分布式训练
+  port: 12345            # 主节点通信端口
+  sync_bn: true          # 启用同步批归一化
+  find_unused_parameters: true  # 查找未使用参数
+  world_size: 4          # GPU数量（可以根据可用GPU数量调整）
+  rank: 0                # 当前进程rank（由脚本自动设置）
 
 model:
   method: fse_inverter
   device: "0"
-  batch_size: 8
+  batch_size: 4         # 总批大小，在分布式训练中会自动分配到各GPU
+  workers: 2
+  checkpoint_path: ""   # 检查点路径（空字符串表示从头开始训练）
 
+
+# 添加实验配置
+exp:
+  seed: 42              # 随机种子
+  config: "fse_inverter_train.yaml"
+  config_dir: "StyleFeatureEditor/configs"
+  wandb: True        # 禁用wandb跟踪（如果您想使用wandb请设为true）
+  wandb_project: "sfe"  # wandb项目名称
+  name: "fse_inverter_train"  # 实验名称
+  exp_dir: "./experiments"    # 实验目录
+
+# 数据配置
+data:
+  transform: face_1024          # 数据变换
+  input_train_dir: "/root/avatar_project/HDTF/video_dataset_align/train"    # 训练数据目录
+  input_val_dir: "/root/avatar_project/HDTF/video_dataset_align/test"       # 验证数据目录  
+  special_dir: "/root/avatar_project/HDTF/video_dataset_align/test"       # 特殊数据目录
+
+# 方法相关配置
+# methods_args:
+#   fse_inverter:
+#     # FSE Inverter的具体参数
+#     latent_avg_samples: 2048
+#     layer_k: 17
 
 encoder_losses:
   l2: 1.0
@@ -17,13 +61,11 @@ encoder_losses:
   adv: 0.01
   feat_rec: 0.01
 
-
 disc_losses:
   main:
     coef: 1
   r1:
     coef: 10
-
 
 optimizers:
     ranger:

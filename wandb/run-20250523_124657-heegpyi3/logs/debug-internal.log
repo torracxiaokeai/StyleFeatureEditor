@@ -1,0 +1,224 @@
+2025-05-23 12:46:57,429 INFO    StreamThr :2012283 [internal.py:wandb_internal():86] W&B internal server running at pid: 2012283, started at: 2025-05-23 12:46:57.428463
+2025-05-23 12:46:57,449 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status
+2025-05-23 12:46:57,461 INFO    WriterThread:2012283 [datastore.py:open_for_write():85] open: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/run-heegpyi3.wandb
+2025-05-23 12:46:57,465 DEBUG   SenderThread:2012283 [sender.py:send():375] send: header
+2025-05-23 12:46:57,465 DEBUG   SenderThread:2012283 [sender.py:send():375] send: run
+2025-05-23 12:46:57,497 INFO    SenderThread:2012283 [sender.py:_maybe_setup_resume():761] checking resume status for None/sfe/heegpyi3
+2025-05-23 12:46:58,657 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: check_version
+2025-05-23 12:46:58,677 INFO    SenderThread:2012283 [dir_watcher.py:__init__():219] watching files in: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files
+2025-05-23 12:46:58,677 INFO    SenderThread:2012283 [sender.py:_start_run_threads():1124] run started: heegpyi3 with start time 1747975617.416547
+2025-05-23 12:46:58,678 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: summary_record
+2025-05-23 12:46:58,678 INFO    SenderThread:2012283 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:46:58,678 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: check_version
+2025-05-23 12:46:59,290 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: run_start
+2025-05-23 12:46:59,310 DEBUG   HandlerThread:2012283 [system_info.py:__init__():31] System info init
+2025-05-23 12:46:59,311 DEBUG   HandlerThread:2012283 [system_info.py:__init__():46] System info init done
+2025-05-23 12:46:59,311 INFO    HandlerThread:2012283 [system_monitor.py:start():181] Starting system monitor
+2025-05-23 12:46:59,312 INFO    SystemMonitor:2012283 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2025-05-23 12:46:59,317 INFO    SystemMonitor:2012283 [interfaces.py:start():190] Started cpu monitoring
+2025-05-23 12:46:59,321 INFO    HandlerThread:2012283 [system_monitor.py:probe():201] Collecting system info
+2025-05-23 12:46:59,329 INFO    SystemMonitor:2012283 [interfaces.py:start():190] Started disk monitoring
+2025-05-23 12:46:59,353 INFO    SystemMonitor:2012283 [interfaces.py:start():190] Started gpu monitoring
+2025-05-23 12:46:59,361 INFO    SystemMonitor:2012283 [interfaces.py:start():190] Started memory monitoring
+2025-05-23 12:46:59,369 INFO    SystemMonitor:2012283 [interfaces.py:start():190] Started network monitoring
+2025-05-23 12:46:59,497 DEBUG   HandlerThread:2012283 [system_info.py:probe():195] Probing system
+2025-05-23 12:46:59,504 DEBUG   HandlerThread:2012283 [system_info.py:_probe_git():180] Probing git
+2025-05-23 12:46:59,533 DEBUG   HandlerThread:2012283 [system_info.py:_probe_git():188] Probing git done
+2025-05-23 12:46:59,533 DEBUG   HandlerThread:2012283 [system_info.py:probe():240] Probing system done
+2025-05-23 12:46:59,534 DEBUG   HandlerThread:2012283 [system_monitor.py:probe():210] {'os': 'Linux-5.15.0-139-generic-x86_64-with-glibc2.31', 'python': '3.10.16', 'heartbeatAt': '2025-05-23T04:46:59.498025', 'startedAt': '2025-05-23T04:46:57.400642', 'docker': None, 'cuda': None, 'args': ('exp.config_dir=configs', 'exp.config=fse_inverter_train.yaml', 'exp.name=fse_inverter_train', 'data.input_train_dir=/root/avatar_project/CelebV-HQ/train', 'data.input_val_dir=/root/avatar_project/CelebV-HQ/test/', 'data.special_dir=/root/avatar_project/CelebV-HQ/test'), 'state': 'running', 'program': '/root/avatar_project/StyleFeatureEditor/scripts/train.py', 'codePath': 'scripts/train.py', 'git': {'remote': 'git@github.com:torracxiaokeai/StyleFeatureEditor.git', 'commit': '8adc663fa35668a8a5d8da8f2b6c815153db343c'}, 'email': '694220955@qq.com', 'root': '/root/avatar_project/StyleFeatureEditor', 'host': 'd1ef2432db94', 'username': 'root', 'executable': '/root/anaconda3/envs/sfe/bin/python', 'cpu_count': 32, 'cpu_count_logical': 64, 'cpu_freq': {'current': 3075.0968281250016, 'min': 1000.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 2968.789, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.41, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.416, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.416, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.415, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.416, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.419, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.419, 'min': 1000.0, 'max': 3700.0}, {'current': 2920.246, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.42, 'min': 1000.0, 'max': 3700.0}, {'current': 2977.87, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3004.799, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3186.857, 'min': 1000.0, 'max': 3700.0}, {'current': 3199.113, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.998, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3041.65, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2969.739, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.433, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.43, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.432, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.435, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.438, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.441, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.444, 'min': 1000.0, 'max': 3700.0}, {'current': 2920.234, 'min': 1000.0, 'max': 3700.0}, {'current': 3045.444, 'min': 1000.0, 'max': 3700.0}, {'current': 2976.923, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3002.895, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3188.766, 'min': 1000.0, 'max': 3700.0}, {'current': 3199.184, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3043.621, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}], 'disk': {'total': 25973.20989227295, 'used': 17864.089324951172}, 'gpu': 'NVIDIA GeForce RTX 3090', 'gpu_count': 8, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}], 'memory': {'total': 251.5417251586914}}
+2025-05-23 12:46:59,534 INFO    HandlerThread:2012283 [system_monitor.py:probe():211] Finished collecting system info
+2025-05-23 12:46:59,534 INFO    HandlerThread:2012283 [system_monitor.py:probe():214] Publishing system info
+2025-05-23 12:46:59,534 DEBUG   HandlerThread:2012283 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2025-05-23 12:46:59,534 DEBUG   HandlerThread:2012283 [system_info.py:_save_pip():67] Saving pip packages done
+2025-05-23 12:46:59,535 DEBUG   HandlerThread:2012283 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2025-05-23 12:46:59,672 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-summary.json
+2025-05-23 12:46:59,672 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/requirements.txt
+2025-05-23 12:46:59,672 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/conda-environment.yaml
+2025-05-23 12:47:06,685 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/conda-environment.yaml
+2025-05-23 12:47:06,754 DEBUG   HandlerThread:2012283 [system_info.py:_save_conda():86] Saving conda packages done
+2025-05-23 12:47:06,755 INFO    HandlerThread:2012283 [system_monitor.py:probe():216] Finished publishing system info
+2025-05-23 12:47:06,759 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:06,759 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: keepalive
+2025-05-23 12:47:06,759 DEBUG   SenderThread:2012283 [sender.py:send():375] send: files
+2025-05-23 12:47:06,760 INFO    SenderThread:2012283 [sender.py:_save_file():1378] saving file wandb-metadata.json with policy now
+2025-05-23 12:47:06,785 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:47:06,793 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:47:07,207 DEBUG   SenderThread:2012283 [sender.py:send():375] send: telemetry
+2025-05-23 12:47:07,666 INFO    wandb-upload_0:2012283 [upload_job.py:push():137] Uploaded file /tmp/tmpx5gajpxbwandb/qm8oxzt0-wandb-metadata.json
+2025-05-23 12:47:07,690 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-metadata.json
+2025-05-23 12:47:07,690 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:08,386 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:09,694 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:11,698 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:13,602 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:13,706 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:15,710 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:17,712 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:18,622 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:19,566 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: log_artifact
+2025-05-23 12:47:19,566 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: log_artifact
+2025-05-23 12:47:19,713 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:20,481 INFO    SenderThread:2012283 [sender.py:send_request_log_artifact():1438] logged artifact project-source - {'id': 'QXJ0aWZhY3Q6MTc1NjY3ODkxNA==', 'digest': 'a734292a2ec981bfe04c257a9e0b8823', 'state': 'COMMITTED', 'aliases': [{'artifactCollectionName': 'project-source', 'alias': 'latest'}, {'artifactCollectionName': 'project-source', 'alias': 'v0'}], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjY0Mzc4NzE2Mw==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6MTc1NjY3ODkxNA==', 'versionIndex': 0}}, 'version': 'v0'}
+2025-05-23 12:47:21,714 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:47:21,775 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:47:21,775 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:47:24,105 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:29,129 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:29,741 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/config.yaml
+2025-05-23 12:47:34,469 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:36,793 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:47:36,795 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:47:40,129 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:45,145 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:50,154 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:51,808 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:47:51,809 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:47:56,161 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:47:59,373 DEBUG   SystemMonitor:2012283 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2025-05-23 12:47:59,385 DEBUG   SenderThread:2012283 [sender.py:send():375] send: stats
+2025-05-23 12:48:01,394 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:06,408 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:06,805 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:48:06,806 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:48:11,583 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:13,850 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:15,865 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:17,367 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:19,864 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:21,809 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:48:21,817 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:48:21,870 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:23,177 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:27,886 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:28,433 DEBUG   SenderThread:2012283 [sender.py:send():375] send: exit
+2025-05-23 12:48:28,433 INFO    SenderThread:2012283 [sender.py:send_exit():598] handling exit code: 1
+2025-05-23 12:48:28,434 INFO    SenderThread:2012283 [sender.py:send_exit():600] handling runtime: 89
+2025-05-23 12:48:28,434 INFO    SenderThread:2012283 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:48:28,435 INFO    SenderThread:2012283 [sender.py:send_exit():606] send defer
+2025-05-23 12:48:28,441 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:28,441 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 0
+2025-05-23 12:48:28,442 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:28,442 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:28,442 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 0
+2025-05-23 12:48:28,442 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 1
+2025-05-23 12:48:28,445 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:28,445 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 1
+2025-05-23 12:48:28,446 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:28,446 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 1
+2025-05-23 12:48:28,446 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 2
+2025-05-23 12:48:28,446 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:28,446 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 2
+2025-05-23 12:48:28,446 INFO    HandlerThread:2012283 [system_monitor.py:finish():190] Stopping system monitor
+2025-05-23 12:48:28,446 DEBUG   SystemMonitor:2012283 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2025-05-23 12:48:28,446 DEBUG   SystemMonitor:2012283 [system_monitor.py:_start():170] Publishing last batch of metrics
+2025-05-23 12:48:28,457 INFO    HandlerThread:2012283 [interfaces.py:finish():202] Joined cpu monitor
+2025-05-23 12:48:28,457 INFO    HandlerThread:2012283 [interfaces.py:finish():202] Joined disk monitor
+2025-05-23 12:48:28,887 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-summary.json
+2025-05-23 12:48:29,029 INFO    HandlerThread:2012283 [interfaces.py:finish():202] Joined gpu monitor
+2025-05-23 12:48:29,030 INFO    HandlerThread:2012283 [interfaces.py:finish():202] Joined memory monitor
+2025-05-23 12:48:29,030 INFO    HandlerThread:2012283 [interfaces.py:finish():202] Joined network monitor
+2025-05-23 12:48:29,034 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,034 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 2
+2025-05-23 12:48:29,034 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 3
+2025-05-23 12:48:29,034 DEBUG   SenderThread:2012283 [sender.py:send():375] send: stats
+2025-05-23 12:48:29,045 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:29,045 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 3
+2025-05-23 12:48:29,049 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,050 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 3
+2025-05-23 12:48:29,050 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 4
+2025-05-23 12:48:29,053 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:29,053 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 4
+2025-05-23 12:48:29,057 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,058 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 4
+2025-05-23 12:48:29,058 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 5
+2025-05-23 12:48:29,061 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:29,061 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 5
+2025-05-23 12:48:29,066 DEBUG   SenderThread:2012283 [sender.py:send():375] send: summary
+2025-05-23 12:48:29,066 INFO    SenderThread:2012283 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:48:29,067 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,067 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 5
+2025-05-23 12:48:29,067 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 6
+2025-05-23 12:48:29,073 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:29,073 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 6
+2025-05-23 12:48:29,077 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,078 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 6
+2025-05-23 12:48:29,078 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 7
+2025-05-23 12:48:29,081 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:48:29,081 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:29,081 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 7
+2025-05-23 12:48:29,085 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:29,086 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 7
+2025-05-23 12:48:29,433 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: poll_exit
+2025-05-23 12:48:29,888 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-summary.json
+2025-05-23 12:48:31,476 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 8
+2025-05-23 12:48:31,476 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: poll_exit
+2025-05-23 12:48:31,477 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:31,477 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 8
+2025-05-23 12:48:31,477 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:31,477 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 8
+2025-05-23 12:48:31,533 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 9
+2025-05-23 12:48:31,534 DEBUG   SenderThread:2012283 [sender.py:send():375] send: artifact
+2025-05-23 12:48:31,534 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:31,541 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 9
+2025-05-23 12:48:31,889 INFO    Thread-12 :2012283 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:32,671 INFO    SenderThread:2012283 [sender.py:send_artifact():1474] sent artifact job-git_github.com_torracxiaokeai_StyleFeatureEditor.git_scripts_train.py - {'id': 'QXJ0aWZhY3Q6MTc1NjY4MTI1OA==', 'digest': 'b7ec65eff7c8b91483f99d1591f49142', 'state': 'COMMITTED', 'aliases': [{'artifactCollectionName': 'job-git_github.com_torracxiaokeai_StyleFeatureEditor.git_scripts_train.py', 'alias': 'latest'}, {'artifactCollectionName': 'job-git_github.com_torracxiaokeai_StyleFeatureEditor.git_scripts_train.py', 'alias': 'v0'}], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjY0Mzc4NzU0Ng==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6MTc1NjY4MTI1OA==', 'versionIndex': 0}}, 'version': 'v0'}
+2025-05-23 12:48:32,671 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:32,671 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 9
+2025-05-23 12:48:32,671 INFO    SenderThread:2012283 [dir_watcher.py:finish():365] shutting down directory watcher
+2025-05-23 12:48:32,894 INFO    SenderThread:2012283 [dir_watcher.py:finish():395] scan: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files
+2025-05-23 12:48:32,894 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-metadata.json wandb-metadata.json
+2025-05-23 12:48:32,894 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log output.log
+2025-05-23 12:48:32,894 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-summary.json wandb-summary.json
+2025-05-23 12:48:32,894 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/requirements.txt requirements.txt
+2025-05-23 12:48:32,895 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/conda-environment.yaml conda-environment.yaml
+2025-05-23 12:48:32,895 INFO    SenderThread:2012283 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/config.yaml config.yaml
+2025-05-23 12:48:32,895 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 10
+2025-05-23 12:48:32,895 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:32,895 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 10
+2025-05-23 12:48:32,896 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:32,896 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 10
+2025-05-23 12:48:32,896 INFO    SenderThread:2012283 [file_pusher.py:finish():167] shutting down file pusher
+2025-05-23 12:48:33,594 INFO    wandb-upload_1:2012283 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/wandb-summary.json
+2025-05-23 12:48:33,893 INFO    wandb-upload_0:2012283 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/output.log
+2025-05-23 12:48:33,942 INFO    wandb-upload_2:2012283 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/requirements.txt
+2025-05-23 12:48:34,010 INFO    wandb-upload_3:2012283 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/conda-environment.yaml
+2025-05-23 12:48:34,052 INFO    wandb-upload_4:2012283 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/files/config.yaml
+2025-05-23 12:48:34,261 INFO    Thread-11 (_thread_body):2012283 [sender.py:transition_state():626] send defer: 11
+2025-05-23 12:48:34,262 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:34,262 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 11
+2025-05-23 12:48:34,262 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:34,262 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 11
+2025-05-23 12:48:34,262 INFO    SenderThread:2012283 [file_pusher.py:join():172] waiting for file pusher
+2025-05-23 12:48:34,262 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 12
+2025-05-23 12:48:34,263 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:34,263 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 12
+2025-05-23 12:48:34,263 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:34,263 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 12
+2025-05-23 12:48:34,445 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: keepalive
+2025-05-23 12:48:35,126 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 13
+2025-05-23 12:48:35,129 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:35,129 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 13
+2025-05-23 12:48:35,130 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:35,130 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 13
+2025-05-23 12:48:35,130 INFO    SenderThread:2012283 [sender.py:transition_state():626] send defer: 14
+2025-05-23 12:48:35,130 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:48:35,130 INFO    HandlerThread:2012283 [handler.py:handle_request_defer():170] handle defer: 14
+2025-05-23 12:48:35,131 DEBUG   SenderThread:2012283 [sender.py:send():375] send: final
+2025-05-23 12:48:35,131 DEBUG   SenderThread:2012283 [sender.py:send():375] send: footer
+2025-05-23 12:48:35,131 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:48:35,131 INFO    SenderThread:2012283 [sender.py:send_request_defer():622] handle sender defer: 14
+2025-05-23 12:48:35,141 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: poll_exit
+2025-05-23 12:48:35,141 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: server_info
+2025-05-23 12:48:35,141 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: get_summary
+2025-05-23 12:48:35,142 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: sampled_history
+2025-05-23 12:48:35,142 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: poll_exit
+2025-05-23 12:48:35,142 DEBUG   SenderThread:2012283 [sender.py:send_request():402] send_request: server_info
+2025-05-23 12:48:35,401 INFO    MainThread:2012283 [wandb_run.py:_footer_history_summary_info():3469] rendering history
+2025-05-23 12:48:35,401 INFO    MainThread:2012283 [wandb_run.py:_footer_history_summary_info():3501] rendering summary
+2025-05-23 12:48:35,402 INFO    MainThread:2012283 [wandb_run.py:_footer_sync_info():3428] logging synced files
+2025-05-23 12:48:35,405 DEBUG   HandlerThread:2012283 [handler.py:handle_request():144] handle_request: shutdown
+2025-05-23 12:48:35,405 INFO    HandlerThread:2012283 [handler.py:finish():845] shutting down handler
+2025-05-23 12:48:36,145 INFO    WriterThread:2012283 [datastore.py:close():298] close: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124657-heegpyi3/run-heegpyi3.wandb
+2025-05-23 12:48:36,397 INFO    SenderThread:2012283 [sender.py:finish():1550] shutting down sender
+2025-05-23 12:48:36,397 INFO    SenderThread:2012283 [file_pusher.py:finish():167] shutting down file pusher
+2025-05-23 12:48:36,397 INFO    SenderThread:2012283 [file_pusher.py:join():172] waiting for file pusher

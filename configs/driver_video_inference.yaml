@@ -1,0 +1,35 @@
+exp:
+  domain: human_faces
+  output_dir: "results/video_inference"  # 默认输出目录
+
+inference:
+  inference_runner: fse_inference_runner  # 使用FSEInferenceRunner
+  driver_dir: ""  # 驱动图像目录，通过命令行参数传入
+  vivface_checkpoint: "/root/avatar_project/StyleFeatureEditor/pretrained_models/iteration_40000.pt"  # ViVFace模型检查点路径，通过命令行参数传入
+
+data:
+  transform: face_256  # 使用1024分辨率的人脸变换
+  inference_dir: ""  # 源图像目录，通过命令行参数传入
+
+model:
+  method: fse_full  # 使用FSE完整方法
+  checkpoint_path: ""  # 模型检查点路径，通过命令行参数传入
+  device: "0"  # 默认使用第一个GPU
+  batch_size: 1  # 批处理大小，视频处理中每次处理一张图
+  workers: 2  # 数据加载工作线程数
+
+methods_args:
+  fse_full: {}  # FSE方法的特定参数，这里使用默认值
+
+# 视频生成参数
+video:
+  fps: 25 # 默认帧率
+  format: "mp4"  # 默认视频格式
+  codec: "libx264"  # 默认编解码器
+  bitrate: "5000k"  # 默认比特率
+
+# 图像处理参数
+image_processing:
+  align: false  # 是否对齐人脸
+  use_mask: false  # 是否使用遮罩
+  mask_threshold: 0.995  # 遮罩阈值 

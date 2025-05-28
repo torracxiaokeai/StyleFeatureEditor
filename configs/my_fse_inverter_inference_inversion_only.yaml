@@ -1,0 +1,58 @@
+# FSE Inverter 仅反演配置文件
+# 用于调用 FSEInverterInferenceRunner 只进行图像反演，不进行编辑
+
+# 实验配置
+exp:
+  config_dir: "configs"
+  config: "my_fse_inverter_inference_inversion_only.yaml"
+  output_dir: "results/fse_inverter_inversion_only"  # 输出目录
+  seed: 42
+  root: "."
+  domain: "human_faces"
+  wandb: false  # 是否使用wandb记录
+
+# 推理配置
+inference:
+  inference_runner: fse_inverter_inference_runner  # 使用FSE Inverter推理运行器
+  editings_data: {}  # 空的编辑数据，表示不进行任何编辑
+
+# 数据配置
+data:
+  inference_dir: "data/test_images"  # 输入图像目录 - 请修改为您的图像路径
+  transform: "face_1024"  # 数据变换
+
+# 模型配置
+model:
+  method: fse_inverter  # 使用FSE Inverter方法
+  device: "0"  # GPU设备ID，如果使用CPU请设为"cpu"
+  batch_size: 4  # 批大小
+  workers: 4  # 数据加载器工作进程数
+  checkpoint_path: "experiments/fse_inverter_train_005/iteration_47000.pt"  # 模型检查点路径
+
+# 方法参数配置
+methods_args:
+  fse_inverter:
+    device: "cuda:0"
+    paths:
+      psp_path: "pretrained_models/psp_ffhq_encode.pt"
+      e4e_path: "pretrained_models/e4e_ffhq_encode.pt"
+      farl_path: "pretrained_models/face_parsing.farl.lapa.main_ema_136500_jit191.pt"
+      mobile_net_pth: "pretrained_models/mobilenet0.25_Final.pth"
+      ir_se50_path: "pretrained_models/model_ir_se50.pth"
+      stylegan_weights: "pretrained_models/stylegan2-ffhq-config-f.pt"
+      stylegan_car_weights: "pretrained_models/stylegan2-car-config-f-new.pkl"
+      stylegan_weights_pkl: "pretrained_models/stylegan2-ffhq-config-f.pkl"
+      arcface_model_path: "pretrained_models/iresnet50-7f187506.pth"
+      moco: "pretrained_models/moco_v2_800ep_pretrain.pt"
+      curricular_face_path: "pretrained_models/CurricularFace_Backbone.pth"
+      mtcnn: "pretrained_models/mtcnn"
+      landmark: "pretrained_models/79999_iter.pth"
+
+# 指标配置（可选）
+metrics:
+  lpips:
+    batch_size: 4
+    n_workers: 4
+  l2:
+    batch_size: 4
+    n_workers: 4 

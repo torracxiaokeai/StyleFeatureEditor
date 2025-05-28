@@ -1,0 +1,9 @@
+2025-05-23 13:10:14,204 INFO    StreamThr :2030201 [internal.py:wandb_internal():86] W&B internal server running at pid: 2030201, started at: 2025-05-23 13:10:14.203741
+2025-05-23 13:10:14,225 DEBUG   HandlerThread:2030201 [handler.py:handle_request():144] handle_request: status
+2025-05-23 13:10:14,257 INFO    WriterThread:2030201 [datastore.py:open_for_write():85] open: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_131014-vvybrfx6/run-vvybrfx6.wandb
+2025-05-23 13:10:14,261 DEBUG   SenderThread:2030201 [sender.py:send():375] send: header
+2025-05-23 13:10:14,261 DEBUG   SenderThread:2030201 [sender.py:send():375] send: run
+2025-05-23 13:10:14,290 INFO    SenderThread:2030201 [sender.py:_maybe_setup_resume():761] checking resume status for None/sfe/vvybrfx6
+2025-05-23 13:10:15,449 INFO    SenderThread:2030201 [dir_watcher.py:__init__():219] watching files in: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_131014-vvybrfx6/files
+2025-05-23 13:10:15,449 INFO    SenderThread:2030201 [sender.py:_start_run_threads():1124] run started: vvybrfx6 with start time 1747977014.202239
+2025-05-23 13:10:17,249 INFO    MainThread:2030201 [internal.py:handle_exit():76] Internal process exited

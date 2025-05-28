@@ -1,0 +1,476 @@
+2025-05-23 12:41:58,714 INFO    StreamThr :2006125 [internal.py:wandb_internal():86] W&B internal server running at pid: 2006125, started at: 2025-05-23 12:41:58.713586
+2025-05-23 12:41:58,753 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status
+2025-05-23 12:41:58,763 INFO    WriterThread:2006125 [datastore.py:open_for_write():85] open: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/run-zgdug2ur.wandb
+2025-05-23 12:41:58,763 DEBUG   SenderThread:2006125 [sender.py:send():375] send: header
+2025-05-23 12:41:58,780 DEBUG   SenderThread:2006125 [sender.py:send():375] send: run
+2025-05-23 12:41:58,812 INFO    SenderThread:2006125 [sender.py:_maybe_setup_resume():761] checking resume status for None/sfe/zgdug2ur
+2025-05-23 12:41:59,859 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: check_version
+2025-05-23 12:41:59,885 INFO    SenderThread:2006125 [dir_watcher.py:__init__():219] watching files in: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files
+2025-05-23 12:41:59,885 INFO    SenderThread:2006125 [sender.py:_start_run_threads():1124] run started: zgdug2ur with start time 1747975318.713897
+2025-05-23 12:41:59,885 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: summary_record
+2025-05-23 12:41:59,886 INFO    SenderThread:2006125 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:41:59,886 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: check_version
+2025-05-23 12:42:00,473 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: run_start
+2025-05-23 12:42:00,491 DEBUG   HandlerThread:2006125 [system_info.py:__init__():31] System info init
+2025-05-23 12:42:00,491 DEBUG   HandlerThread:2006125 [system_info.py:__init__():46] System info init done
+2025-05-23 12:42:00,491 INFO    HandlerThread:2006125 [system_monitor.py:start():181] Starting system monitor
+2025-05-23 12:42:00,493 INFO    SystemMonitor:2006125 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2025-05-23 12:42:00,497 INFO    HandlerThread:2006125 [system_monitor.py:probe():201] Collecting system info
+2025-05-23 12:42:00,505 INFO    SystemMonitor:2006125 [interfaces.py:start():190] Started cpu monitoring
+2025-05-23 12:42:00,521 INFO    SystemMonitor:2006125 [interfaces.py:start():190] Started disk monitoring
+2025-05-23 12:42:00,529 INFO    SystemMonitor:2006125 [interfaces.py:start():190] Started gpu monitoring
+2025-05-23 12:42:00,553 INFO    SystemMonitor:2006125 [interfaces.py:start():190] Started memory monitoring
+2025-05-23 12:42:00,577 INFO    SystemMonitor:2006125 [interfaces.py:start():190] Started network monitoring
+2025-05-23 12:42:00,637 DEBUG   HandlerThread:2006125 [system_info.py:probe():195] Probing system
+2025-05-23 12:42:00,641 DEBUG   HandlerThread:2006125 [system_info.py:_probe_git():180] Probing git
+2025-05-23 12:42:00,656 DEBUG   HandlerThread:2006125 [system_info.py:_probe_git():188] Probing git done
+2025-05-23 12:42:00,656 DEBUG   HandlerThread:2006125 [system_info.py:probe():240] Probing system done
+2025-05-23 12:42:00,657 DEBUG   HandlerThread:2006125 [system_monitor.py:probe():210] {'os': 'Linux-5.15.0-139-generic-x86_64-with-glibc2.31', 'python': '3.10.16', 'heartbeatAt': '2025-05-23T04:42:00.638099', 'startedAt': '2025-05-23T04:41:58.663123', 'docker': None, 'cuda': None, 'args': ('exp.config_dir=configs', 'exp.config=fse_inverter_train.yaml', 'exp.name=fse_inverter_train', 'data.input_train_dir=/root/avatar_project/CelebV-HQ/train', 'data.input_val_dir=/root/avatar_project/CelebV-HQ/test/', 'data.special_dir=/root/avatar_project/CelebV-HQ/test'), 'state': 'running', 'program': '/root/avatar_project/StyleFeatureEditor/scripts/train.py', 'codePath': 'scripts/train.py', 'git': {'remote': 'git@github.com:torracxiaokeai/StyleFeatureEditor.git', 'commit': '8adc663fa35668a8a5d8da8f2b6c815153db343c'}, 'email': '694220955@qq.com', 'root': '/root/avatar_project/StyleFeatureEditor', 'host': 'd1ef2432db94', 'username': 'root', 'executable': '/root/anaconda3/envs/sfe/bin/python', 'cpu_count': 32, 'cpu_count_logical': 64, 'cpu_freq': {'current': 2988.941265625, 'min': 1000.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3047.023, 'min': 1000.0, 'max': 3700.0}, {'current': 3011.117, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3270.621, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3271.009, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3271.38, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3271.837, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3272.197, 'min': 1000.0, 'max': 3700.0}, {'current': 2951.225, 'min': 1000.0, 'max': 3700.0}, {'current': 3052.494, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.031, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 3038.669, 'min': 1000.0, 'max': 3700.0}, {'current': 2884.188, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3275.87, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.998, 'min': 1000.0, 'max': 3700.0}, {'current': 3248.288, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3276.389, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3276.709, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 3276.948, 'min': 1000.0, 'max': 3700.0}, {'current': 2943.496, 'min': 1000.0, 'max': 3700.0}, {'current': 3027.542, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3299.997, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.996, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.001, 'min': 1000.0, 'max': 3700.0}, {'current': 2899.999, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.001, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.0, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 2900.002, 'min': 1000.0, 'max': 3700.0}, {'current': 3300.0, 'min': 1000.0, 'max': 3700.0}], 'disk': {'total': 25973.20989227295, 'used': 17863.915405273438}, 'gpu': 'NVIDIA GeForce RTX 3090', 'gpu_count': 8, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}, {'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}], 'memory': {'total': 251.5417251586914}}
+2025-05-23 12:42:00,657 INFO    HandlerThread:2006125 [system_monitor.py:probe():211] Finished collecting system info
+2025-05-23 12:42:00,657 INFO    HandlerThread:2006125 [system_monitor.py:probe():214] Publishing system info
+2025-05-23 12:42:00,657 DEBUG   HandlerThread:2006125 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2025-05-23 12:42:00,657 DEBUG   HandlerThread:2006125 [system_info.py:_save_pip():67] Saving pip packages done
+2025-05-23 12:42:00,658 DEBUG   HandlerThread:2006125 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2025-05-23 12:42:00,880 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/conda-environment.yaml
+2025-05-23 12:42:00,880 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/requirements.txt
+2025-05-23 12:42:00,880 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-summary.json
+2025-05-23 12:42:12,377 DEBUG   HandlerThread:2006125 [system_info.py:_save_conda():86] Saving conda packages done
+2025-05-23 12:42:12,379 INFO    HandlerThread:2006125 [system_monitor.py:probe():216] Finished publishing system info
+2025-05-23 12:42:12,445 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:12,449 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: keepalive
+2025-05-23 12:42:12,449 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:12,450 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: keepalive
+2025-05-23 12:42:12,450 DEBUG   SenderThread:2006125 [sender.py:send():375] send: files
+2025-05-23 12:42:12,450 INFO    SenderThread:2006125 [sender.py:_save_file():1378] saving file wandb-metadata.json with policy now
+2025-05-23 12:42:12,477 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:42:12,478 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:42:12,921 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/conda-environment.yaml
+2025-05-23 12:42:12,921 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-metadata.json
+2025-05-23 12:42:13,000 DEBUG   SenderThread:2006125 [sender.py:send():375] send: telemetry
+2025-05-23 12:42:13,410 INFO    wandb-upload_0:2006125 [upload_job.py:push():137] Uploaded file /tmp/tmpd8its3o0wandb/tqk456cj-wandb-metadata.json
+2025-05-23 12:42:13,921 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_created():278] file/dir created: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:14,459 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:15,926 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:17,933 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:19,514 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:19,934 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:21,438 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: log_artifact
+2025-05-23 12:42:21,438 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: log_artifact
+2025-05-23 12:42:21,935 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:23,789 INFO    wandb-upload_18:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpp_d02fuk
+2025-05-23 12:42:23,868 INFO    wandb-upload_45:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxu8v9xhj
+2025-05-23 12:42:23,888 INFO    wandb-upload_0:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpqm76i0n0
+2025-05-23 12:42:23,900 INFO    wandb-upload_31:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpvkh3sxzp
+2025-05-23 12:42:23,922 INFO    wandb-upload_27:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1u1q5hfn
+2025-05-23 12:42:23,936 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:23,942 INFO    wandb-upload_17:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpykgugn0_
+2025-05-23 12:42:23,942 INFO    wandb-upload_39:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp2tqw_ywc
+2025-05-23 12:42:23,942 INFO    wandb-upload_13:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8ft24crt
+2025-05-23 12:42:23,964 INFO    wandb-upload_57:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpj64lo2yv
+2025-05-23 12:42:23,980 INFO    wandb-upload_16:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpyowea6o_
+2025-05-23 12:42:23,980 INFO    wandb-upload_43:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpkulhdily
+2025-05-23 12:42:23,980 INFO    wandb-upload_20:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp16m9xa79
+2025-05-23 12:42:24,021 INFO    wandb-upload_49:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp4l7hw540
+2025-05-23 12:42:24,021 INFO    wandb-upload_32:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp77_yrz8c
+2025-05-23 12:42:24,021 INFO    wandb-upload_62:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpegtrp89k
+2025-05-23 12:42:24,022 INFO    wandb-upload_6:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwnzirp3w
+2025-05-23 12:42:24,022 INFO    wandb-upload_10:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp586m8vc0
+2025-05-23 12:42:24,048 INFO    wandb-upload_3:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpc8vtvacs
+2025-05-23 12:42:24,048 INFO    wandb-upload_2:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpuglf4upq
+2025-05-23 12:42:24,048 INFO    wandb-upload_51:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpym7ro9k3
+2025-05-23 12:42:24,079 INFO    wandb-upload_11:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8xfq2nu8
+2025-05-23 12:42:24,079 INFO    wandb-upload_55:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplhzjian7
+2025-05-23 12:42:24,080 INFO    wandb-upload_50:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp6t2yodik
+2025-05-23 12:42:24,080 INFO    wandb-upload_41:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwdezpyb4
+2025-05-23 12:42:24,080 INFO    wandb-upload_7:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprgp4e8ox
+2025-05-23 12:42:24,099 INFO    wandb-upload_9:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpkyyfsyly
+2025-05-23 12:42:24,099 INFO    wandb-upload_33:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprx15npx5
+2025-05-23 12:42:24,100 INFO    wandb-upload_26:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzmj4xik8
+2025-05-23 12:42:24,100 INFO    wandb-upload_35:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpvm5f1xmv
+2025-05-23 12:42:24,100 INFO    wandb-upload_44:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpx4ql85gs
+2025-05-23 12:42:24,100 INFO    wandb-upload_22:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8sp8qzmi
+2025-05-23 12:42:24,100 INFO    wandb-upload_38:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpmtw9vo_r
+2025-05-23 12:42:24,118 INFO    wandb-upload_24:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpsng_hpro
+2025-05-23 12:42:24,119 INFO    wandb-upload_8:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpiyjvahw8
+2025-05-23 12:42:24,119 INFO    wandb-upload_59:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmptc72wnwh
+2025-05-23 12:42:24,120 INFO    wandb-upload_29:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpoenb5kgi
+2025-05-23 12:42:24,120 INFO    wandb-upload_47:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpyudefh_8
+2025-05-23 12:42:24,120 INFO    wandb-upload_25:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpfi2fiy1n
+2025-05-23 12:42:24,147 INFO    wandb-upload_14:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp_v643wbt
+2025-05-23 12:42:24,147 INFO    wandb-upload_63:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp0j4d942y
+2025-05-23 12:42:24,172 INFO    wandb-upload_40:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7gesbx_v
+2025-05-23 12:42:24,173 INFO    wandb-upload_58:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7tc3il3k
+2025-05-23 12:42:24,173 INFO    wandb-upload_53:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpfkjmg5d8
+2025-05-23 12:42:24,194 INFO    wandb-upload_48:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp74b879r9
+2025-05-23 12:42:24,195 INFO    wandb-upload_46:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7w9d3g2c
+2025-05-23 12:42:24,195 INFO    wandb-upload_21:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmppz_xi_05
+2025-05-23 12:42:24,195 INFO    wandb-upload_34:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3e39takh
+2025-05-23 12:42:24,195 INFO    wandb-upload_36:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpdl1v9_9x
+2025-05-23 12:42:24,217 INFO    wandb-upload_61:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpz78mwdnf
+2025-05-23 12:42:24,224 INFO    wandb-upload_19:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp4evdf7gy
+2025-05-23 12:42:24,231 INFO    wandb-upload_54:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpk4oipejw
+2025-05-23 12:42:24,237 INFO    wandb-upload_56:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmptv5aqnzd
+2025-05-23 12:42:24,245 INFO    wandb-upload_60:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpnwuh68uq
+2025-05-23 12:42:24,257 INFO    wandb-upload_52:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzm8xthg1
+2025-05-23 12:42:24,483 INFO    wandb-upload_49:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp5629hxb2
+2025-05-23 12:42:24,483 INFO    wandb-upload_3:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp7fow2524
+2025-05-23 12:42:24,484 INFO    wandb-upload_9:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpjt45w4ei
+2025-05-23 12:42:24,484 INFO    wandb-upload_26:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp7mi67q3e
+2025-05-23 12:42:24,679 INFO    wandb-upload_42:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpkfzystyo
+2025-05-23 12:42:24,689 INFO    wandb-upload_18:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp9meehosb
+2025-05-23 12:42:24,689 INFO    wandb-upload_30:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzmd_35p3
+2025-05-23 12:42:24,691 INFO    wandb-upload_28:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxp4ar2d5
+2025-05-23 12:42:24,716 INFO    wandb-upload_1:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1wzc1raw
+2025-05-23 12:42:24,797 INFO    wandb-upload_37:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp0o3pv01p
+2025-05-23 12:42:24,836 INFO    wandb-upload_23:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3hf4j7jm
+2025-05-23 12:42:24,858 INFO    wandb-upload_4:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpra627j_7
+2025-05-23 12:42:24,889 INFO    wandb-upload_48:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpx8pjfmqd
+2025-05-23 12:42:24,960 INFO    wandb-upload_15:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpbnaw6zq1
+2025-05-23 12:42:24,997 INFO    wandb-upload_40:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpo_oo3a1i
+2025-05-23 12:42:25,161 INFO    wandb-upload_0:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp9c5r8ii5
+2025-05-23 12:42:25,186 INFO    wandb-upload_5:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpo9ohctbb
+2025-05-23 12:42:25,233 INFO    wandb-upload_38:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpuiuzw349
+2025-05-23 12:42:25,285 INFO    wandb-upload_61:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp_ktpwe54
+2025-05-23 12:42:25,421 INFO    wandb-upload_33:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpvjiomcpe
+2025-05-23 12:42:25,429 INFO    wandb-upload_55:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpukhjlx2h
+2025-05-23 12:42:25,429 INFO    wandb-upload_16:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpks_sw5a6
+2025-05-23 12:42:25,441 INFO    wandb-upload_57:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1fuk7ry0
+2025-05-23 12:42:25,464 INFO    wandb-upload_44:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpajpwdlg4
+2025-05-23 12:42:25,489 INFO    wandb-upload_30:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpdscmru8j
+2025-05-23 12:42:25,489 INFO    wandb-upload_23:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpomnft1bx
+2025-05-23 12:42:25,505 INFO    wandb-upload_43:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpnmfnywbp
+2025-05-23 12:42:25,621 INFO    wandb-upload_45:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpw7tc9onn
+2025-05-23 12:42:25,639 INFO    wandb-upload_20:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpnjbm9236
+2025-05-23 12:42:25,701 INFO    wandb-upload_21:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3xhbm2ym
+2025-05-23 12:42:25,742 INFO    wandb-upload_10:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpagnm9l_i
+2025-05-23 12:42:25,755 INFO    wandb-upload_2:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzzpvqfqs
+2025-05-23 12:42:25,773 INFO    wandb-upload_62:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpp4dinfke
+2025-05-23 12:42:26,381 INFO    wandb-upload_35:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpy9himsti
+2025-05-23 12:42:25,825 INFO    wandb-upload_41:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpgwtreg6c
+2025-05-23 12:42:25,833 INFO    wandb-upload_13:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpg5261yiz
+2025-05-23 12:42:26,422 INFO    wandb-upload_37:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp66w1z0vm
+2025-05-23 12:42:25,899 INFO    wandb-upload_39:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpvcqz_pgq
+2025-05-23 12:42:25,950 INFO    wandb-upload_8:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpafwmulpv
+2025-05-23 12:42:25,969 INFO    wandb-upload_51:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpysll7h42
+2025-05-23 12:42:25,970 INFO    wandb-upload_25:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3_dl45yg
+2025-05-23 12:42:26,004 INFO    wandb-upload_46:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7w58fgr1
+2025-05-23 12:42:26,061 INFO    wandb-upload_27:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpcffl8eyb
+2025-05-23 12:42:26,062 INFO    wandb-upload_19:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpcf0sdq70
+2025-05-23 12:42:26,070 INFO    wandb-upload_53:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpe0xzhg60
+2025-05-23 12:42:26,070 INFO    wandb-upload_34:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpk6v63hp6
+2025-05-23 12:42:26,070 INFO    wandb-upload_29:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1j8n77sh
+2025-05-23 12:42:26,074 INFO    wandb-upload_54:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpr4wxw0t7
+2025-05-23 12:42:26,089 INFO    wandb-upload_59:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxgiru5db
+2025-05-23 12:42:26,098 INFO    wandb-upload_22:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmphfmpn9ev
+2025-05-23 12:42:26,118 INFO    wandb-upload_49:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp05mq2neh
+2025-05-23 12:42:26,119 INFO    wandb-upload_28:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpy4xabg28
+2025-05-23 12:42:26,120 INFO    wandb-upload_24:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpfu38sgvv
+2025-05-23 12:42:26,123 INFO    wandb-upload_31:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpc7bnvdc3
+2025-05-23 12:42:26,130 INFO    wandb-upload_7:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpkvjr9q33
+2025-05-23 12:42:26,137 INFO    wandb-upload_56:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpnuktwemk
+2025-05-23 12:42:26,169 INFO    wandb-upload_42:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpspn5renj
+2025-05-23 12:42:26,209 INFO    wandb-upload_36:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp9b0yihzq
+2025-05-23 12:42:26,277 INFO    wandb-upload_15:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpom0i8s1q
+2025-05-23 12:42:26,292 INFO    wandb-upload_11:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzf5gfgsq
+2025-05-23 12:42:26,307 INFO    wandb-upload_18:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpfpjv_ojw
+2025-05-23 12:42:26,337 INFO    wandb-upload_47:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp64chzckn
+2025-05-23 12:42:26,359 INFO    wandb-upload_52:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpeidi9mc3
+2025-05-23 12:42:26,375 INFO    wandb-upload_14:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmps8ia3j8d
+2025-05-23 12:42:25,813 INFO    wandb-upload_12:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpt_9ut7om
+2025-05-23 12:42:26,397 INFO    wandb-upload_50:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3bzslugt
+2025-05-23 12:42:26,409 INFO    wandb-upload_26:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp9sdrsqvs
+2025-05-23 12:42:26,417 INFO    wandb-upload_58:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpnizwh4o0
+2025-05-23 12:42:25,861 INFO    wandb-upload_32:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpj0o1z9ag
+2025-05-23 12:42:26,438 INFO    wandb-upload_63:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpdp1udrrb
+2025-05-23 12:42:26,449 INFO    wandb-upload_1:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpl8b65wiz
+2025-05-23 12:42:26,454 INFO    wandb-upload_9:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpj1qjg3y6
+2025-05-23 12:42:26,455 INFO    wandb-upload_4:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpoh3ilmgc
+2025-05-23 12:42:26,501 INFO    wandb-upload_48:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpye8ptvk3
+2025-05-23 12:42:26,580 INFO    wandb-upload_17:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpv6b_mhov
+2025-05-23 12:42:26,589 INFO    wandb-upload_57:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpdsgebls1
+2025-05-23 12:42:26,592 INFO    wandb-upload_5:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp6evogssg
+2025-05-23 12:42:26,637 INFO    wandb-upload_61:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpo_u2_lyr
+2025-05-23 12:42:26,701 INFO    wandb-upload_55:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp2m5p1mg3
+2025-05-23 12:42:26,733 INFO    wandb-upload_44:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmph_37408g
+2025-05-23 12:42:26,741 INFO    wandb-upload_60:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpx6l54_pc
+2025-05-23 12:42:26,756 INFO    wandb-upload_40:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmps11um28q
+2025-05-23 12:42:26,773 INFO    wandb-upload_38:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwp61cjb4
+2025-05-23 12:42:26,787 INFO    wandb-upload_16:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7jgfrjvq
+2025-05-23 12:42:26,804 INFO    wandb-upload_0:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp4aeq_618
+2025-05-23 12:42:26,829 INFO    wandb-upload_30:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3d4swn8v
+2025-05-23 12:42:26,838 INFO    wandb-upload_23:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwfezr4kr
+2025-05-23 12:42:26,853 INFO    wandb-upload_45:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7f0zh6h3
+2025-05-23 12:42:26,885 INFO    wandb-upload_43:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpzm2vq8we
+2025-05-23 12:42:26,907 INFO    wandb-upload_31:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp3m8fxndj
+2025-05-23 12:42:26,929 INFO    wandb-upload_19:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp0n53d2hb
+2025-05-23 12:42:26,961 INFO    wandb-upload_35:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmphdzjms6a
+2025-05-23 12:42:27,069 INFO    wandb-upload_42:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp7d1zq5oc
+2025-05-23 12:42:27,093 INFO    wandb-upload_36:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpdz2hy51_
+2025-05-23 12:42:27,095 INFO    wandb-upload_2:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpgdn8hx3c
+2025-05-23 12:42:27,100 INFO    wandb-upload_7:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpda44y9f_
+2025-05-23 12:42:27,269 INFO    wandb-upload_33:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpy0ut4u0l
+2025-05-23 12:42:27,270 INFO    wandb-upload_24:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpkh5zhkhh
+2025-05-23 12:42:27,302 INFO    wandb-upload_6:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplf476ehz
+2025-05-23 12:42:27,329 INFO    wandb-upload_13:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp5vqq1_gb
+2025-05-23 12:42:27,345 INFO    wandb-upload_3:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpt_6j53oc
+2025-05-23 12:42:27,365 INFO    wandb-upload_59:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxct4b6d_
+2025-05-23 12:42:27,382 INFO    wandb-upload_49:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp4t0zwksk
+2025-05-23 12:42:27,425 INFO    wandb-upload_46:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpk208_5rr
+2025-05-23 12:42:27,446 INFO    wandb-upload_34:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpm0u9q5_i
+2025-05-23 12:42:27,538 INFO    wandb-upload_47:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmp5s9e4cxf
+2025-05-23 12:42:27,539 INFO    wandb-upload_45:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpen_lcgly
+2025-05-23 12:42:27,585 INFO    wandb-upload_41:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpmtafkeyd
+2025-05-23 12:42:27,652 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:42:27,737 INFO    wandb-upload_25:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp014rq7pm
+2025-05-23 12:42:27,787 INFO    wandb-upload_8:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp6woco1n7
+2025-05-23 12:42:27,837 INFO    wandb-upload_37:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprb3jnihy
+2025-05-23 12:42:28,030 INFO    wandb-upload_22:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmphp1vjid4
+2025-05-23 12:42:28,109 INFO    wandb-upload_51:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpghwhnll8
+2025-05-23 12:42:28,110 INFO    wandb-upload_23:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpfqg4gu9z
+2025-05-23 12:42:28,094 INFO    wandb-upload_17:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpgzxxx542
+2025-05-23 12:42:28,094 INFO    wandb-upload_38:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpi1s8xemu
+2025-05-23 12:42:28,206 INFO    wandb-upload_7:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmphi47rfph
+2025-05-23 12:42:28,082 INFO    wandb-upload_28:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprpfk987c
+2025-05-23 12:42:28,077 INFO    wandb-upload_56:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1ridd04k
+2025-05-23 12:42:28,151 INFO    wandb-upload_29:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpghvnmwq2
+2025-05-23 12:42:28,098 INFO    wandb-upload_16:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp0qs_sw04
+2025-05-23 12:42:28,224 INFO    wandb-upload_1:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwk606s_m
+2025-05-23 12:42:28,316 INFO    wandb-upload_57:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp78tz48js
+2025-05-23 12:42:28,337 INFO    wandb-upload_39:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprh22kerz
+2025-05-23 12:42:28,754 INFO    wandb-upload_4:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpq6iybxfc
+2025-05-23 12:42:28,755 INFO    wandb-upload_9:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8wwllhy4
+2025-05-23 12:42:28,443 INFO    wandb-upload_52:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpaiwadnjn
+2025-05-23 12:42:28,449 INFO    wandb-upload_47:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpxxm0csw1
+2025-05-23 12:42:28,529 INFO    wandb-upload_60:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpo0xowey4
+2025-05-23 12:42:28,537 INFO    wandb-upload_40:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwjg_t8v_
+2025-05-23 12:42:28,554 INFO    wandb-upload_18:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp0ftw_8ka
+2025-05-23 12:42:28,554 INFO    wandb-upload_61:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8dvm652h
+2025-05-23 12:42:28,562 INFO    wandb-upload_51:2006125 [upload_job.py:push():92] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpwy7scvmz
+2025-05-23 12:42:28,583 INFO    wandb-upload_27:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp2mo5x_at
+2025-05-23 12:42:28,596 INFO    wandb-upload_26:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpn_22f57k
+2025-05-23 12:42:28,917 INFO    wandb-upload_42:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplkhdhr73
+2025-05-23 12:42:28,918 INFO    wandb-upload_3:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpi6kr93o9
+2025-05-23 12:42:28,660 INFO    wandb-upload_62:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplhokael_
+2025-05-23 12:42:28,668 INFO    wandb-upload_32:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1zgv5rxm
+2025-05-23 12:42:28,695 INFO    wandb-upload_10:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8g_23bdl
+2025-05-23 12:42:28,717 INFO    wandb-upload_59:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmps7ypljsm
+2025-05-23 12:42:28,985 INFO    wandb-upload_24:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpii3968um
+2025-05-23 12:42:28,749 INFO    wandb-upload_34:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp_5kg2djj
+2025-05-23 12:42:28,432 INFO    wandb-upload_14:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpq8a_myfc
+2025-05-23 12:42:29,028 INFO    wandb-upload_6:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpngvcy80q
+2025-05-23 12:42:28,389 INFO    wandb-upload_21:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8zzqoptd
+2025-05-23 12:42:28,809 INFO    wandb-upload_53:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpby2qk_ik
+2025-05-23 12:42:28,847 INFO    wandb-upload_36:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwetj1_c5
+2025-05-23 12:42:28,848 INFO    wandb-upload_33:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp1kbvn3a_
+2025-05-23 12:42:28,873 INFO    wandb-upload_0:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpyp4u3wcn
+2025-05-23 12:42:28,873 INFO    wandb-upload_19:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpmlihvet1
+2025-05-23 12:42:29,061 INFO    wandb-upload_48:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpttidcn3s
+2025-05-23 12:42:28,893 INFO    wandb-upload_11:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwo7s_fmp
+2025-05-23 12:42:28,893 INFO    wandb-upload_12:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpl6spogd3
+2025-05-23 12:42:28,909 INFO    wandb-upload_55:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp20q8kbig
+2025-05-23 12:42:28,660 INFO    wandb-upload_58:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpo12fazci
+2025-05-23 12:42:28,632 INFO    wandb-upload_15:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpu5l2srn9
+2025-05-23 12:42:28,962 INFO    wandb-upload_13:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplxrvlyl0
+2025-05-23 12:42:28,979 INFO    wandb-upload_63:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp2zql56r3
+2025-05-23 12:42:28,733 INFO    wandb-upload_50:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp5se83mc3
+2025-05-23 12:42:29,001 INFO    wandb-upload_43:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpok9k0frp
+2025-05-23 12:42:29,145 INFO    wandb-upload_2:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp7maw4f8q
+2025-05-23 12:42:29,050 INFO    wandb-upload_8:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp3oyi_ozq
+2025-05-23 12:42:29,053 INFO    wandb-upload_44:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpci7cik22
+2025-05-23 12:42:28,889 INFO    wandb-upload_49:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8efv92g9
+2025-05-23 12:42:29,175 INFO    wandb-upload_23:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmps3qg43ng
+2025-05-23 12:42:29,097 INFO    wandb-upload_46:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpwv5ayrbg
+2025-05-23 12:42:29,125 INFO    wandb-upload_30:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmph2_f6aby
+2025-05-23 12:42:28,797 INFO    wandb-upload_54:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpuwbkxru7
+2025-05-23 12:42:29,165 INFO    wandb-upload_45:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpmsf7wxyi
+2025-05-23 12:42:29,089 INFO    wandb-upload_5:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpcjgmk0na
+2025-05-23 12:42:29,213 INFO    wandb-upload_41:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpvll4mwxc
+2025-05-23 12:42:29,233 INFO    wandb-upload_37:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpo23rkjm6
+2025-05-23 12:42:29,245 INFO    wandb-upload_25:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmptpjfbagn
+2025-05-23 12:42:29,390 INFO    wandb-upload_7:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmppjgmb45r
+2025-05-23 12:42:29,425 INFO    wandb-upload_17:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp5vcwgwrl
+2025-05-23 12:42:29,434 INFO    wandb-upload_35:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpqmufj5ap
+2025-05-23 12:42:29,457 INFO    wandb-upload_22:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpc92fei0n
+2025-05-23 12:42:29,471 INFO    wandb-upload_56:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpygp1e2xw
+2025-05-23 12:42:29,493 INFO    wandb-upload_28:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpltbym7vz
+2025-05-23 12:42:29,493 INFO    wandb-upload_38:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxbnivewi
+2025-05-23 12:42:29,505 INFO    wandb-upload_29:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp6lkctq96
+2025-05-23 12:42:29,688 INFO    wandb-upload_39:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpmeoy9arb
+2025-05-23 12:42:29,713 INFO    wandb-upload_16:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp4tg9t_mo
+2025-05-23 12:42:29,717 INFO    wandb-upload_20:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmph983cqba
+2025-05-23 12:42:29,735 INFO    wandb-upload_40:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp6jojdon6
+2025-05-23 12:42:29,736 INFO    wandb-upload_4:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpta7otv1b
+2025-05-23 12:42:29,736 INFO    wandb-upload_31:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp0z91sm7l
+2025-05-23 12:42:29,757 INFO    wandb-upload_57:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpdlvbx_0i
+2025-05-23 12:42:29,786 INFO    wandb-upload_1:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmplvv8gb30
+2025-05-23 12:42:29,924 INFO    wandb-upload_60:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpesi9oogu
+2025-05-23 12:42:30,057 INFO    wandb-upload_61:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp8uutu8zn
+2025-05-23 12:42:30,085 INFO    wandb-upload_18:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpxfgfzgo0
+2025-05-23 12:42:30,086 INFO    wandb-upload_47:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpsv4qn4gf
+2025-05-23 12:42:30,106 INFO    wandb-upload_9:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmprgvblgji
+2025-05-23 12:42:30,123 INFO    wandb-upload_52:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp5p52o5ak
+2025-05-23 12:42:31,563 INFO    SenderThread:2006125 [sender.py:send_request_log_artifact():1438] logged artifact project-source - {'id': 'QXJ0aWZhY3Q6MTc1NjY3ODkxNA==', 'digest': 'a734292a2ec981bfe04c257a9e0b8823', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjY0Mzc4NzE2Mw==', 'latestArtifact': None}, 'version': 'latest'}
+2025-05-23 12:42:31,573 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:31,915 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:42:32,197 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/config.yaml
+2025-05-23 12:42:34,205 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:42:37,186 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:42,201 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:42,477 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:42:42,481 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:42:47,870 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:52,877 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:42:57,489 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:42:57,496 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:42:58,849 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:00,577 DEBUG   SystemMonitor:2006125 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2025-05-23 12:43:00,589 DEBUG   SenderThread:2006125 [sender.py:send():375] send: stats
+2025-05-23 12:43:04,608 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:09,609 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:12,502 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:43:12,502 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:43:14,828 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:18,284 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:20,233 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:20,285 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:22,297 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:24,305 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:25,893 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:27,509 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: stop_status
+2025-05-23 12:43:27,510 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: stop_status
+2025-05-23 12:43:30,585 DEBUG   SenderThread:2006125 [sender.py:send():375] send: stats
+2025-05-23 12:43:31,589 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:32,341 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:32,461 DEBUG   SenderThread:2006125 [sender.py:send():375] send: exit
+2025-05-23 12:43:32,462 INFO    SenderThread:2006125 [sender.py:send_exit():598] handling exit code: 1
+2025-05-23 12:43:32,462 INFO    SenderThread:2006125 [sender.py:send_exit():600] handling runtime: 91
+2025-05-23 12:43:32,462 INFO    SenderThread:2006125 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:43:32,463 INFO    SenderThread:2006125 [sender.py:send_exit():606] send defer
+2025-05-23 12:43:32,463 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:32,463 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 0
+2025-05-23 12:43:32,463 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:32,463 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 0
+2025-05-23 12:43:32,463 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 1
+2025-05-23 12:43:32,464 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:32,464 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 1
+2025-05-23 12:43:32,464 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:32,464 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 1
+2025-05-23 12:43:32,464 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 2
+2025-05-23 12:43:32,464 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:32,464 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 2
+2025-05-23 12:43:32,464 INFO    HandlerThread:2006125 [system_monitor.py:finish():190] Stopping system monitor
+2025-05-23 12:43:32,465 INFO    HandlerThread:2006125 [interfaces.py:finish():202] Joined cpu monitor
+2025-05-23 12:43:32,465 INFO    HandlerThread:2006125 [interfaces.py:finish():202] Joined disk monitor
+2025-05-23 12:43:32,465 DEBUG   SystemMonitor:2006125 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2025-05-23 12:43:32,465 DEBUG   SystemMonitor:2006125 [system_monitor.py:_start():170] Publishing last batch of metrics
+2025-05-23 12:43:33,058 INFO    HandlerThread:2006125 [interfaces.py:finish():202] Joined gpu monitor
+2025-05-23 12:43:33,058 INFO    HandlerThread:2006125 [interfaces.py:finish():202] Joined memory monitor
+2025-05-23 12:43:33,058 INFO    HandlerThread:2006125 [interfaces.py:finish():202] Joined network monitor
+2025-05-23 12:43:33,060 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,060 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 2
+2025-05-23 12:43:33,060 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 3
+2025-05-23 12:43:33,061 DEBUG   SenderThread:2006125 [sender.py:send():375] send: stats
+2025-05-23 12:43:33,061 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:33,066 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 3
+2025-05-23 12:43:33,069 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,069 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 3
+2025-05-23 12:43:33,069 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 4
+2025-05-23 12:43:33,073 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:33,073 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 4
+2025-05-23 12:43:33,076 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,076 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 4
+2025-05-23 12:43:33,076 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 5
+2025-05-23 12:43:33,077 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:33,077 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 5
+2025-05-23 12:43:33,077 DEBUG   SenderThread:2006125 [sender.py:send():375] send: summary
+2025-05-23 12:43:33,078 INFO    SenderThread:2006125 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2025-05-23 12:43:33,078 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,078 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 5
+2025-05-23 12:43:33,078 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 6
+2025-05-23 12:43:33,078 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:33,078 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 6
+2025-05-23 12:43:33,079 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,079 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 6
+2025-05-23 12:43:33,079 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 7
+2025-05-23 12:43:33,079 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:33,079 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:33,079 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 7
+2025-05-23 12:43:33,080 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:33,080 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 7
+2025-05-23 12:43:33,345 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-summary.json
+2025-05-23 12:43:33,459 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: poll_exit
+2025-05-23 12:43:35,394 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 8
+2025-05-23 12:43:35,395 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: poll_exit
+2025-05-23 12:43:35,396 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:35,396 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 8
+2025-05-23 12:43:35,396 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:35,396 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 8
+2025-05-23 12:43:35,478 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 9
+2025-05-23 12:43:35,479 DEBUG   SenderThread:2006125 [sender.py:send():375] send: artifact
+2025-05-23 12:43:35,479 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:35,483 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 9
+2025-05-23 12:43:36,361 INFO    Thread-12 :2006125 [dir_watcher.py:_on_file_modified():295] file/dir modified: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:37,221 INFO    wandb-upload_51:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmpkz3j7jo6
+2025-05-23 12:43:37,370 INFO    wandb-upload_27:2006125 [upload_job.py:push():95] Uploaded file /root/.local/share/wandb/artifacts/staging/tmp5v5zg4xp
+2025-05-23 12:43:38,477 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: keepalive
+2025-05-23 12:43:39,058 INFO    SenderThread:2006125 [sender.py:send_artifact():1474] sent artifact job-git_github.com_torracxiaokeai_StyleFeatureEditor.git_scripts_train.py - {'id': 'QXJ0aWZhY3Q6MTc1NjY4MTI1OA==', 'digest': 'b7ec65eff7c8b91483f99d1591f49142', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjY0Mzc4NzU0Ng==', 'latestArtifact': None}, 'version': 'latest'}
+2025-05-23 12:43:39,059 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:39,059 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 9
+2025-05-23 12:43:39,059 INFO    SenderThread:2006125 [dir_watcher.py:finish():365] shutting down directory watcher
+2025-05-23 12:43:39,061 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: status_report
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():395] scan: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-metadata.json wandb-metadata.json
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log output.log
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-summary.json wandb-summary.json
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/requirements.txt requirements.txt
+2025-05-23 12:43:39,370 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/conda-environment.yaml conda-environment.yaml
+2025-05-23 12:43:39,371 INFO    SenderThread:2006125 [dir_watcher.py:finish():409] scan save: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/config.yaml config.yaml
+2025-05-23 12:43:39,371 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 10
+2025-05-23 12:43:39,373 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:39,373 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 10
+2025-05-23 12:43:39,377 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:39,377 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 10
+2025-05-23 12:43:39,377 INFO    SenderThread:2006125 [file_pusher.py:finish():167] shutting down file pusher
+2025-05-23 12:43:40,060 INFO    wandb-upload_3:2006125 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/wandb-summary.json
+2025-05-23 12:43:40,370 INFO    wandb-upload_42:2006125 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/output.log
+2025-05-23 12:43:40,422 INFO    wandb-upload_62:2006125 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/requirements.txt
+2025-05-23 12:43:40,474 INFO    wandb-upload_10:2006125 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/config.yaml
+2025-05-23 12:43:40,494 INFO    wandb-upload_32:2006125 [upload_job.py:push():137] Uploaded file /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/files/conda-environment.yaml
+2025-05-23 12:43:40,701 INFO    Thread-11 (_thread_body):2006125 [sender.py:transition_state():626] send defer: 11
+2025-05-23 12:43:40,705 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:40,705 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 11
+2025-05-23 12:43:40,716 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:40,716 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 11
+2025-05-23 12:43:40,716 INFO    SenderThread:2006125 [file_pusher.py:join():172] waiting for file pusher
+2025-05-23 12:43:40,716 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 12
+2025-05-23 12:43:40,717 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:40,717 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 12
+2025-05-23 12:43:40,721 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:40,721 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 12
+2025-05-23 12:43:41,593 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 13
+2025-05-23 12:43:41,593 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:41,594 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 13
+2025-05-23 12:43:41,594 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:41,594 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 13
+2025-05-23 12:43:41,594 INFO    SenderThread:2006125 [sender.py:transition_state():626] send defer: 14
+2025-05-23 12:43:41,595 DEBUG   SenderThread:2006125 [sender.py:send():375] send: final
+2025-05-23 12:43:41,595 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: defer
+2025-05-23 12:43:41,595 INFO    HandlerThread:2006125 [handler.py:handle_request_defer():170] handle defer: 14
+2025-05-23 12:43:41,595 DEBUG   SenderThread:2006125 [sender.py:send():375] send: footer
+2025-05-23 12:43:41,596 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: defer
+2025-05-23 12:43:41,596 INFO    SenderThread:2006125 [sender.py:send_request_defer():622] handle sender defer: 14
+2025-05-23 12:43:41,603 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: poll_exit
+2025-05-23 12:43:41,604 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: server_info
+2025-05-23 12:43:41,604 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: get_summary
+2025-05-23 12:43:41,604 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: sampled_history
+2025-05-23 12:43:41,604 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: poll_exit
+2025-05-23 12:43:41,605 DEBUG   SenderThread:2006125 [sender.py:send_request():402] send_request: server_info
+2025-05-23 12:43:41,869 INFO    MainThread:2006125 [wandb_run.py:_footer_history_summary_info():3469] rendering history
+2025-05-23 12:43:41,869 INFO    MainThread:2006125 [wandb_run.py:_footer_history_summary_info():3501] rendering summary
+2025-05-23 12:43:41,869 INFO    MainThread:2006125 [wandb_run.py:_footer_sync_info():3428] logging synced files
+2025-05-23 12:43:41,873 DEBUG   HandlerThread:2006125 [handler.py:handle_request():144] handle_request: shutdown
+2025-05-23 12:43:41,873 INFO    HandlerThread:2006125 [handler.py:finish():845] shutting down handler
+2025-05-23 12:43:42,605 INFO    WriterThread:2006125 [datastore.py:close():298] close: /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_124158-zgdug2ur/run-zgdug2ur.wandb
+2025-05-23 12:43:42,863 INFO    SenderThread:2006125 [sender.py:finish():1550] shutting down sender
+2025-05-23 12:43:42,864 INFO    SenderThread:2006125 [file_pusher.py:finish():167] shutting down file pusher
+2025-05-23 12:43:42,864 INFO    SenderThread:2006125 [file_pusher.py:join():172] waiting for file pusher

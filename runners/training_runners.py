@@ -604,17 +604,33 @@ class BaseTrainingRunner(BaseRunner):
             # 非主进程返回空结果
             return [], [], {}
 
+        # 确保数据一致性：图片数量和路径数量应该匹配
+        if not self.config.dist.enabled or self.config.dist.rank == 0:
+            # 检查并修正数据不匹配的问题
+            val_pics_count = len(self.val_pics_orig)
+            processed_paths_count = len(self.processed_paths)
+            special_paths_count = len(self.special_paths)
+            
+            print(f"Validation pics: {val_pics_count}, Processed paths: {processed_paths_count}, Special paths: {special_paths_count}")
+            
+            # 如果处理的图片数量少于special_paths，使用processed_paths
+            if val_pics_count < special_paths_count:
+                print(f"Using processed_paths ({processed_paths_count}) instead of special_paths ({special_paths_count})")
+                actual_paths = self.processed_paths[:val_pics_count]  # 确保路径数量不超过图片数量
+            else:
+                actual_paths = self.special_paths[:val_pics_count]  # 确保路径数量不超过图片数量
+
         captions = defaultdict(str)
         for metric in self.metrics:
             if metric.get_name() == "FID":
                 continue
 
-            # 使用处理过的样本的路径
-            sample_paths = self.processed_paths
+            # 使用实际处理过的样本的路径
+            sample_paths = actual_paths
 
             from_data_arg = {
-                "fake_data": self.val_pics_res,
-                "inp_data": self.val_pics_orig,
+                "fake_data": self.val_pics_res[:len(sample_paths)],  # 确保数据长度匹配
+                "inp_data": self.val_pics_orig[:len(sample_paths)],  # 确保数据长度匹配
                 "paths": sample_paths,
             }
             
@@ -638,7 +654,11 @@ class BaseTrainingRunner(BaseRunner):
                 for path in sample_paths:
                     captions[path] += f"{metric.get_name()}: Error\n"
 
-        return self.val_pics_orig, self.val_pics_res, captions
+        # 返回匹配的数据
+        result_pics_orig = self.val_pics_orig[:len(actual_paths)]
+        result_pics_res = self.val_pics_res[:len(actual_paths)]
+        
+        return result_pics_orig, result_pics_res, captions
 
     @torch.inference_mode()
     def validate(self, special=False):
@@ -843,7 +863,21 @@ class BaseTrainingRunner(BaseRunner):
 
 @training_runners.add_to_registry(name="fse_inverter")
 class FSEInverterTrainingRunner(BaseTrainingRunner):
-    def forward(self, x):
+    def __init__(self, *args, **kwargs):
+        super(FSEInverterTrainingRunner, self).__init__(*args, **kwargs)
+        
+        # 初始化渐进式训练设置 - FSE Inverter通常不使用渐进式训练
+        self.enable_progressive_training = False
+        if hasattr(self.config.train, "enable_progressive_training"):
+            self.enable_progressive_training = self.config.train.enable_progressive_training
+    
+    def forward(self, inputs):
+        # 处理输入参数 - 兼容字典和张量输入
+        if isinstance(inputs, dict):
+            x = inputs.get('source', inputs.get('driver', list(inputs.values())[0]))
+        else:
+            x = inputs
+            
         # 获取原始模型，处理DDP包装情况
         base_model = self.get_base_model()
         
@@ -902,9 +936,22 @@ class FSEInverterTrainingRunner(BaseTrainingRunner):
             if isinstance(driver, torch.Tensor) and driver.device != self.device:
                 inputs['driver'] = driver.to(self.device)
         
-        # 调用forward方法处理输入
-        result_batch = self.forward(inputs)
-        return result_batch
+        # 检查是否处于验证模式
+        if not self.method.training:
+            # 验证模式：直接调用method进行推理，返回重建图像
+            # 处理输入参数 - 兼容字典和张量输入
+            if isinstance(inputs, dict):
+                x = inputs.get('source', inputs.get('driver', list(inputs.values())[0]))
+            else:
+                x = inputs
+            
+            # 直接调用method进行推理
+            result_batch = self.method(x, return_latents=False)
+            return result_batch
+        else:
+            # 训练模式：调用forward方法处理输入，返回完整字典
+            result_batch = self.forward(inputs)
+            return result_batch
 
 
 @training_runners.add_to_registry(name="fse_editor")

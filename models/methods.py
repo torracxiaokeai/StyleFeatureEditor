@@ -115,14 +115,84 @@ class FSEFull(nn.Module):
         # 情况2: 有discriminator前缀（原始方式）
         elif has_disc_prefix:
             print("检测到discriminator前缀，使用原始方式加载判别器")
-            self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
-            print("成功加载判别器权重")
+            try:
+                self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
+                print("成功加载判别器权重")
+            except Exception as e:
+                print(f"加载判别器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=False)
         
         # 情况3: 两种前缀都没有找到
         else:
             print("未找到判别器权重，保留默认权重")
 
+    def load_weights_for_inference(self, editor_ckpt_path, inverter_ckpt_path):
+        """
+        专门用于推理时的权重加载方法
+        分别从editor checkpoint和inverter checkpoint加载权重
+        
+        Args:
+            editor_ckpt_path: 编辑器检查点路径
+            inverter_ckpt_path: 反转器检查点路径
+        """
+        print("=" * 60)
+        print("推理模式：分别加载编辑器和反转器权重")
+        print("=" * 60)
+        
+        # 1. 加载编辑器检查点中的判别器权重
+        print(f"从编辑器检查点加载判别器权重: {editor_ckpt_path}")
+        editor_ckpt = torch.load(editor_ckpt_path, map_location="cpu")
+        self.load_disc_from_ckpt(editor_ckpt)
+        
+        # 2. 加载编辑器检查点中的编码器权重
+        print(f"从编辑器检查点加载编码器权重: {editor_ckpt_path}")
+        encoder_state_dict = get_keys_with_prefix_handling(editor_ckpt, "encoder")
+        try:
+            self.encoder.load_state_dict(encoder_state_dict, strict=True)
+            print("成功加载编码器权重")
+        except Exception as e:
+            print(f"加载编码器权重时出错: {e}")
+            print("尝试非严格模式加载...")
+            self.encoder.load_state_dict(encoder_state_dict, strict=False)
+        
+        # 3. 加载反转器检查点中的反转器权重
+        print(f"从反转器检查点加载反转器权重: {inverter_ckpt_path}")
+        inverter_ckpt = torch.load(inverter_ckpt_path, map_location="cpu")
+        inverter_state_dict = get_keys_with_prefix_handling(inverter_ckpt, "inverter")
+        try:
+            self.inverter.load_state_dict(inverter_state_dict, strict=True)
+            print("成功加载反转器权重")
+        except Exception as e:
+            print(f"加载反转器权重时出错: {e}")
+            print("尝试非严格模式加载...")
+            self.inverter.load_state_dict(inverter_state_dict, strict=False)
+        
+        # 4. 加载StyleGAN解码器权重
+        print(f"加载StyleGAN解码器权重: {self.opts.stylegan_weights}")
+        ckpt = torch.load(self.opts.stylegan_weights)
+        self.decoder.load_state_dict(ckpt["g_ema"], strict=False)
+        self.latent_avg = ckpt['latent_avg'].to(self.device)
+        
+        # 5. 设置模型为评估模式
+        self.inverter = self.inverter.eval().to(self.device)
+        self.decoder = self.decoder.eval().to(self.device)
+        self.e4e_encoder = self.e4e_encoder.to(self.device)
+        
+        # 6. 冻结不需要梯度的组件
+        toogle_grad(self.inverter, False)
+        toogle_grad(self.decoder, False)
+        toogle_grad(self.e4e_encoder, False)
+        
+        print("=" * 60)
+        print("权重加载完成")
+        print("=" * 60)
+
     def load_weights(self):
+        """
+        训练时的权重加载方法
+        保持原有逻辑不变
+        """
         if self.opts.checkpoint_path != "":
             print(f"Loading from checkpoint: {self.opts.checkpoint_path}")
             ckpt = torch.load(self.opts.checkpoint_path, map_location="cpu")
@@ -265,18 +335,55 @@ class FSEInverter(nn.Module):
         self.discriminator.to(self.device)
 
     def load_disc_from_ckpt(self, ckpt):
+        # 检查是否有module.discriminator前缀的键
+        has_module_prefix = any(key.startswith("module.discriminator.") for key in ckpt["state_dict"].keys())
+        
+        # 检查是否有discriminator前缀的键
         unique_keys = set(key.split(".")[0] for key in ckpt["state_dict"].keys())
-        if "discriminator" in unique_keys:
-            self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
+        has_disc_prefix = "discriminator" in unique_keys
+        
+        # 情况1: 有module.discriminator前缀
+        if has_module_prefix:
+            print("检测到module.discriminator前缀，使用前缀处理方式加载判别器")
+            disc_state_dict = get_keys_with_prefix_handling(ckpt, "discriminator")
+            try:
+                self.discriminator.load_state_dict(disc_state_dict, strict=True)
+                print("成功加载判别器权重")
+            except Exception as e:
+                print(f"加载判别器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.discriminator.load_state_dict(disc_state_dict, strict=False)
+        
+        # 情况2: 有discriminator前缀（原始方式）
+        elif has_disc_prefix:
+            print("检测到discriminator前缀，使用原始方式加载判别器")
+            try:
+                self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=True)
+                print("成功加载判别器权重")
+            except Exception as e:
+                print(f"加载判别器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.discriminator.load_state_dict(get_keys(ckpt, "discriminator"), strict=False)
+        
+        # 情况3: 两种前缀都没有找到
         else:
-            print("Can not find Discriminator weights in checkpoint, leave default weights.")
+            print("未找到判别器权重，保留默认权重")
 
     def load_weights(self):
         if self.opts.checkpoint_path != "":
-            print("Loading  from checkpoint: {}".format(self.opts.checkpoint_path))
+            print("Loading from checkpoint: {}".format(self.opts.checkpoint_path))
             ckpt = torch.load(self.opts.checkpoint_path, map_location="cpu")
             self.load_disc_from_ckpt(ckpt)
-            self.encoder.load_state_dict(get_keys(ckpt, "encoder"), strict=True)
+            
+            # 使用修正后的函数调用方式处理encoder权重
+            encoder_state_dict = get_keys_with_prefix_handling(ckpt, "encoder")
+            try:
+                self.encoder.load_state_dict(encoder_state_dict, strict=True)
+                print("成功加载编码器权重")
+            except Exception as e:
+                print(f"加载编码器权重时出错: {e}")
+                print("尝试非严格模式加载...")
+                self.encoder.load_state_dict(encoder_state_dict, strict=False)
 
         print("Loading decoder from", self.opts.stylegan_weights)
         ckpt = torch.load(self.opts.stylegan_weights)

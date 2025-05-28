@@ -40,9 +40,9 @@ train:
 
 data:
   dataset_type: "vivface_edit"
-  input_train_dir: "/root/avatar_project/CelebV-HQ/train"
-  input_val_dir: "/root/avatar_project/CelebV-HQ/test"
-  special_dir: "/root/avatar_project/CelebV-HQ/test"
+  input_train_dir: "/root/avatar_project/HDTF/video_dataset_align/train"
+  input_val_dir: "/root/avatar_project/HDTF/video_dataset_align/test"
+  special_dir: "/root/avatar_project/HDTF/video_dataset_align/test"
   transform: "face_1024"
 
 optimizers:

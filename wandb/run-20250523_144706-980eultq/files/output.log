@@ -1,0 +1,202 @@
+
+run_dir /root/avatar_project/StyleFeatureEditor/wandb/run-20250523_144706-980eultq/files
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.2s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./utils/torch_utils/ops)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./training)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./training)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./training)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./training)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./runners)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./runners)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./runners)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./runners)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./configs)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./scripts)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria/lpips)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria/lpips)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria/lpips)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./criteria/lpips)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./datasets)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./datasets)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./datasets)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/deltaedit)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/deltaedit)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/deltaedit)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/mapper)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/mapper)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/mapper)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/mapper)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./editings/styleclip/models/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./metrics)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/vivface/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/farl)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/farl)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn)... Done. 0.1s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.6s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/mtcnn/mtcnn_pytorch/src)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/psp/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/stylegan2)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/stylegan2/op)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./models/hyperinverter/encoders)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./arguments)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./arguments)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib/ops)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib/ops)... Done. 0.0s
+[34m[1mwandb[39m[22m: Adding directory to artifact (./dnnlib/tflib/ops)... Done. 0.2s
+/root/anaconda3/envs/sfe/lib/python3.10/site-packages/torchvision/models/_utils.py:135: UserWarning: Using 'weights' as positional parameter(s) is deprecated since 0.13 and will be removed in 0.15. Please use keyword parameter(s) instead.
+  warnings.warn(
+/root/anaconda3/envs/sfe/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=AlexNet_Weights.IMAGENET1K_V1`. You can also use `weights=AlexNet_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading dataset
+Using ViVFaceEditDataset for training and validation
+ViVFaceEditDataset: 加载了 6741 个身份，共 626330 张图像
+start_batch_size: 8
+self.config.train.bs_used_before_adv_loss: 8
+self.config.train.train_dis: True
+self.config.model.batch_size: 8
+Adjusting batch size from 8 to 2 per GPU
+/root/anaconda3/envs/sfe/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading ResNet ArcFace
+从ViVFace检查点加载模型: /root/avatar_project/StyleFeatureEditor/pretrained_models/iteration_40000.pt
+Loading e4e over the pSp framework from checkpoint: /root/avatar_project/StyleFeatureEditor/pretrained_models/iteration_40000.pt
+Error(s) in loading state_dict for Generator:
+	Unexpected key(s) in state_dict: "layer.self_attn.in_proj_weight", "layer.self_attn.in_proj_bias", "layer.self_attn.out_proj.weight", "layer.self_attn.out_proj.bias", "layer.multihead_attn.in_proj_weight", "layer.multihead_attn.in_proj_bias", "layer.multihead_attn.out_proj.weight", "layer.multihead_attn.out_proj.bias", "layer.linear1.weight", "layer.linear1.bias", "layer.linear2.weight", "layer.linear2.bias", "layer.norm1.weight", "layer.norm1.bias", "layer.norm2.weight", "layer.norm2.bias", "layer.norm3.weight", "layer.norm3.bias".  please check, whether this meet expection
+Step 0/500000 (0.00%)
+Start validating
+
+
+
+
+
+
+
+  0%|▎                                                                                                              | 44/13851 [00:15<1:15:50,  3.03it/s]
+  0%|▍                                                                                                              | 50/13851 [00:17<1:18:17,  2.94it/s]
+
+ 92%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▋         | 23/25 [00:29<00:01,  1.30it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 25/25 [00:30<00:00,  1.22s/it]
+  0%|                                                                                                                             | 0/25 [00:00<?, ?it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 25/25 [00:25<00:00,  1.01s/it]
+
+
+
+
+
+
+
+
+
+
+
+
+
+94it [00:26,  3.77it/s]
+Average MSSSIM loss is 0.290+-0.023
+100it [00:27,  3.57it/s]
+
+
+
+
+
+
+
+  0%|▎                                                                                                              | 45/13851 [00:14<1:19:25,  2.90it/s]
+  0%|▍                                                                                                              | 50/13851 [00:16<1:15:03,  3.06it/s]
+
+ 84%|█████████████████████████████████████████████████████████████████████████████████████████████████▍                  | 21/25 [00:22<00:02,  1.59it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 25/25 [00:23<00:00,  1.09it/s]
+
+ 52%|████████████████████████████████████████████████████████████▎                                                       | 13/25 [00:25<00:14,  1.18s/it]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 25/25 [00:26<00:00,  1.06s/it]
+
+
+
+
+
+
+
+
+
+
+
+97it [00:22,  4.00it/s]
+
+100it [00:23,  4.27it/s]

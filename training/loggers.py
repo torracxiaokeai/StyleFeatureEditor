@@ -151,7 +151,38 @@ class ConsoleLogger:
 
 class WandbLogger:
     def __init__(self, config):
-        wandb.login(key=os.environ['WANDB_KEY'].strip(), relogin=True)
+        # 尝试多种方式获取 wandb API key
+        api_key = None
+        
+        # 方法1: 检查自定义的 WANDB_KEY 环境变量
+        if 'WANDB_KEY' in os.environ:
+            api_key = os.environ['WANDB_KEY'].strip()
+        # 方法2: 检查标准的 WANDB_API_KEY 环境变量
+        elif 'WANDB_API_KEY' in os.environ:
+            api_key = os.environ['WANDB_API_KEY'].strip()
+        # 方法3: 尝试使用已经登录的 wandb 状态
+        else:
+            try:
+                # 检查是否已经有有效的登录状态
+                import wandb.sdk.lib.apikey
+                if wandb.api.api_key:
+                    api_key = wandb.api.api_key
+                else:
+                    print("Warning: No wandb API key found. Trying to use existing login...")
+            except Exception as e:
+                print(f"Warning: Could not access wandb API key: {e}")
+        
+        # 登录 wandb
+        if api_key:
+            wandb.login(key=api_key, relogin=True)
+        else:
+            # 如果没有找到 API key，尝试使用现有的登录状态
+            try:
+                wandb.login(relogin=False)
+            except Exception as e:
+                print(f"Error: Could not login to wandb: {e}")
+                raise RuntimeError("Please set WANDB_KEY environment variable or run 'wandb login' first")
+        
         if config.train.resume_path == "":
             config_for_logger = omegaconf.OmegaConf.to_container(config)
             self.wandb_args = {
@@ -199,20 +230,48 @@ class WandbLogger:
     @staticmethod
     def log_special_pics(pics, captions, paths):
         to_log = {}
-        for i, path in enumerate(paths):
-            to_log[path] = wandb.Image(pics[i], caption=captions[path])
-        wandb.log(to_log)
+        
+        # 添加长度检查，避免索引越界
+        max_pics = len(pics)
+        max_paths = len(paths)
+        
+        if max_pics == 0:
+            print("Warning: No pictures to log")
+            return
+            
+        if max_pics != max_paths:
+            print(f"Warning: Mismatch between pics count ({max_pics}) and paths count ({max_paths})")
+            # 使用较小的数量以避免越界
+            actual_count = min(max_pics, max_paths)
+        else:
+            actual_count = max_pics
+            
+        for i in range(actual_count):
+            path = paths[i] if i < max_paths else f"img_{i}"
+            pic = pics[i] if i < max_pics else pics[0]  # 如果图片不够，重复使用第一张
+            caption = captions.get(path, f"Image {i}") if captions else f"Image {i}"
+            
+            try:
+                to_log[path] = wandb.Image(pic, caption=caption)
+            except Exception as e:
+                print(f"Error logging image {i} for path {path}: {e}")
+                continue
+                
+        if to_log:  # 只有在有内容时才记录
+            wandb.log(to_log)
 
 
 class BlankWandbLogger:
     def __init__(self):
         self.wandb_args = None
 
-    def log_epoch(*args, **kwars):
+    @staticmethod
+    def log_epoch(*args, **kwargs):
         pass
 
-    def log_special_pics(*args, **kwars):
-        pass   
+    @staticmethod  
+    def log_special_pics(*args, **kwargs):
+        pass
 
 
 class TrainigLogger:
@@ -270,6 +329,13 @@ class TrainigLogger:
         # 只在主进程保存验证日志
         if not self.is_main_process:
             return
+        
+        # 检查输入数据的一致性
+        if len(orig_pics) != len(method_pics):
+            print(f"Warning: Mismatch between orig_pics ({len(orig_pics)}) and method_pics ({len(method_pics)})")
+            min_count = min(len(orig_pics), len(method_pics))
+            orig_pics = orig_pics[:min_count]
+            method_pics = method_pics[:min_count]
             
         log_pics = []
         for real_img, fake_img in zip(orig_pics, method_pics):
@@ -280,4 +346,14 @@ class TrainigLogger:
             concat_img.paste(fake_img, (real_img.width, 0))
             log_pics.append(concat_img)
 
-        self.wandb_logger.log_special_pics(log_pics, captions, special_paths)
+        # 确保special_paths的数量与log_pics匹配
+        if len(special_paths) > len(log_pics):
+            print(f"Trimming special_paths from {len(special_paths)} to {len(log_pics)}")
+            actual_paths = special_paths[:len(log_pics)]
+        elif len(special_paths) < len(log_pics):
+            print(f"Extending special_paths from {len(special_paths)} to {len(log_pics)}")
+            actual_paths = special_paths + [f"img_{i}" for i in range(len(special_paths), len(log_pics))]
+        else:
+            actual_paths = special_paths
+
+        self.wandb_logger.log_special_pics(log_pics, captions, actual_paths)
