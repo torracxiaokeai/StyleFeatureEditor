@@ -1,7 +1,7 @@
 dist:
   enabled: True
   port: 10024           # 通信端口
-  world_size: 4
+  world_size: 2
   rank: 0
   sync_bn: true
   find_unused_parameters: true
@@ -15,7 +15,7 @@ exp:
 model:
   method: fse_full
   checkpoint_path: ""
-  batch_size: 8
+  batch_size: 4
   workers: 2
 
 methods_args:
@@ -33,7 +33,7 @@ train:
   val_metrics: ["l2", "lpips", "msssim"]
   encoder_optimizer: adam
   disc_optimizer: adam
-  bs_used_before_adv_loss: 8
+  bs_used_before_adv_loss: 4
   dis_train_start_step: 2000
   vivface_checkpoint: "/root/avatar_project/StyleFeatureEditor/pretrained_models/iteration_40000.pt"
   disc_edits: []

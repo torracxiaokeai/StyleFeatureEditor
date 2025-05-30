@@ -93,7 +93,7 @@ class EncoderLossesArgs:
     feat_rec_l1: float = 0.0
     l2_latent: float = 0.0
     id_vit: float = 0.0
-    # ViVFace相关损失函数参数
+    # ViVFace相关损失函数参数（旧格式，保持兼容性）
     vivface_self_rec: float = 0.0
     vivface_reenact: float = 0.0
     vivface_w_consistency: float = 0.0
@@ -101,6 +101,15 @@ class EncoderLossesArgs:
     vivface_ss_regularization: float = 0.0
     vivface_id: float = 0.0
     vivface_delta: float = 0.0
+    # VivFace新格式损失函数参数（用于配置文件）
+    L_self: Dict = field(default_factory=dict)  # 支持嵌套配置
+    L_reenact: Dict = field(default_factory=dict)  # 支持嵌套配置
+    L_latent_consistency: float = 0.0
+    L_ss_latent_consistency: float = 0.0
+    L_ss_latent_regularization: float = 0.0
+    loss_id: float = 0.0  # 身份损失
+    delta_losses: float = 0.0  # 渐进式delta损失
+    encoder_discriminator_loss: float = 0.0  # W判别器损失
 
 
 @args.add_to_registry("dist")

@@ -1,0 +1,167 @@
+# ViVFace第一阶段训练配置
+# 基于ViVFace原始coach_first_stage_complete_dp.py的配置参数
+
+# 实验配置
+exp:
+  name: "vivface_first_stage"
+  exp_dir: "experiments"
+  wandb: false
+
+# 模型配置
+model:
+  method: "vivface_method"
+  batch_size: 2  # 原始ViVFace默认值
+  workers: 2
+  checkpoint_path: ""
+
+# 训练配置
+train:
+  train_runner: "vivface_method_training"
+  steps: 500000  # max_steps = 500000
+  start_step: 0
+  val_step: 2000  # val_interval = 1000
+  log_step: 100    # board_interval = 50
+  checkpoint_step: 1000  # 可调整
+  
+  # 验证指标
+  val_metrics:
+    - "fid"
+    - "lpips"
+    - "id"
+  
+  # 优化器配置（基于ViVFace的configure_optimizers）
+  encoder_optimizer: "ranger"  # 使用已存在的ranger优化器
+  
+  # 判别器训练配置
+  train_dis: true
+  dis_train_start_step: 0  # 从开始就训练判别器
+  disc_optimizer: "adam"
+  bs_used_before_adv_loss: 2
+  
+  # 渐进式训练配置
+  enable_progressive_training: true
+  progressive_stage: "WTraining"  # 起始阶段
+  progressive_steps: [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000]  # 每2000步进一阶段
+
+# 数据配置
+data:
+  dataset_type: "vivface"  # 使用ViVFace数据集格式
+  transform: "face_1024"
+  input_train_dir: "/root/avatar_project/CelebV-HQ_align/train/"
+  input_val_dir: "/root/avatar_project/CelebV-HQ_align/test/"
+  special_dir: "/root/avatar_project/CelebV-HQ_align/test/"
+
+# 分布式训练配置
+dist:
+  enabled: True
+  world_size: 2
+  rank: 0
+  find_unused_parameters: true
+  sync_bn: True
+  port: 10056   
+
+# 方法特定参数（传递给VivFaceMethod）
+methods_args:
+  vivface_method:
+    device: "cuda:0"
+    progressive_stage: "WTraining"
+    ss_style_count: 10  # ss_styles = 10
+    # 编码器权重配置
+    encoder_weight_strategy: "e4e"  # 可选：'e4e', 'ir_se50', 'none'
+    use_pretrained_encoder: true    # 是否使用预训练编码器权重
+
+# 优化器配置
+optimizers:
+  ranger:
+    lr: 0.0001  # learning_rate = 0.0001
+    alpha: 0.5
+    k: 6
+    betas: [0.95, 0.999]
+  adam:
+    lr: 0.00002  # w_discriminator_lr = 2e-5
+    betas: [0.5, 0.999]
+
+# 编码器损失配置（基于ViVFace calc_loss函数）
+encoder_losses:
+  # 重建损失 - 使用正确的损失注册名和权重配置
+  L_self: 
+    lambda: 1.0                    # 自重建损失总权重
+    l2_lambda: 1.0                 # L2损失权重
+    lpips_lambda: 0.8              # LPIPS损失权重  
+    gv_lambda: 0.1                 # 梯度方差损失权重
+  
+  L_reenact:
+    lambda: 1.0                    # 表情重演损失总权重
+    l2_lambda: 1.0                 # L2损失权重
+    lpips_lambda: 0.8              # LPIPS损失权重  
+    gv_lambda: 0.1                 # 梯度方差损失权重
+  
+  # 一致性损失
+  L_latent_consistency: 1.0        # consistency_lambda = 1.0
+  L_ss_latent_consistency: 1.0     # consistency_lambda = 1.0
+  
+  # 正则化损失
+  L_ss_latent_regularization: 1.0  # 权重在损失函数内部设置
+  
+  # 身份损失
+  loss_id: 0.1                     # id_lambda = 0.1
+  
+  # 渐进式delta损失
+  delta_losses: 1.0                # 权重在损失函数内部设置
+  
+  # W判别器损失
+  encoder_discriminator_loss: 0.01 # w_discriminator_lambda，可以根据需要调整
+
+# 判别器损失配置
+disc_losses:
+  w_discriminator:
+    coef: 1.0
+    r1_gamma: 10.0  # r1 = 10
+
+# 指标配置
+metrics:
+  fid:
+    batch_size: 8
+    n_workers: 4
+  lpips:
+    batch_size: 4
+    n_workers: 4
+  id:
+    n_threads: 8
+
+# ========================================
+# 编码器权重配置说明
+# ========================================
+# encoder_weight_strategy 可选项：
+# 1. "e4e": 使用E4E预训练编码器权重（推荐）
+#    - 路径：pretrained_models/e4e_ffhq_encode.pt
+#    - 优点：更好的重建质量，适合身份-表情解耦任务
+# 
+# 2. "ir_se50": 使用IR-SE50预训练权重
+#    - 路径：pretrained_models/model_ir_se50.pth  
+#    - 优点：更强的身份特征提取能力
+#
+# 3. "none": 不使用预训练权重，从头训练
+#    - 优点：完全自定义训练，但需要更长训练时间
+#
+# use_pretrained_encoder: 总开关，设为false时忽略encoder_weight_strategy
+#
+# 配置示例：
+# ========================================
+# # 使用E4E预训练权重（推荐配置）
+# methods_args:
+#   vivface_method:
+#     encoder_weight_strategy: "e4e"
+#     use_pretrained_encoder: true
+#
+# # 使用IR-SE50预训练权重  
+# methods_args:
+#   vivface_method:
+#     encoder_weight_strategy: "ir_se50"
+#     use_pretrained_encoder: true
+#
+# # 完全从头训练
+# methods_args:
+#   vivface_method:
+#     encoder_weight_strategy: "none"
+#     use_pretrained_encoder: false 

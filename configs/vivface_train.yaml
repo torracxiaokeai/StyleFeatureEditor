@@ -19,7 +19,7 @@ train:
 model:
   method: vivface_fse
   checkpoint_path: ""
-  batch_size: 2
+  batch_size: 4
   workers: 2
 
 # ViVFace损失函数配置
@@ -52,9 +52,9 @@ optimizers:
 data:
   transform: "vivface_transform"
   dataset_type: "vivface"
-  input_train_dir: "/root/avatar_project/CelebV-HQ/train/"
-  input_val_dir: "/root/avatar_project/CelebV-HQ/test/"
-  special_dir: "/root/avatar_project/CelebV-HQ/test/"
+  input_train_dir: "/root/avatar_project/CelebV-HQ_align/train/"
+  input_val_dir: "/root/avatar_project/CelebV-HQ_align/test/"
+  special_dir: "/root/avatar_project/CelebV-HQ_align/test/"
 
 # 实验配置
 exp:
@@ -79,9 +79,3 @@ methods_args:
     progressive_stage: "WTraining"
     ss_style_count: 10
 
-# 指标配置
-metrics:
-  msssim: {}
-  lpips: {}
-  l2: {}
-  fid: {}

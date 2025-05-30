@@ -17,18 +17,60 @@ other_losses = ClassRegistry()
 class LossBuilder:
     def __init__(self, enc_losses_dict, disc_losses_dict, device):
         self.coefs_dict = enc_losses_dict
-        self.losses_names = [k for k, v in enc_losses_dict.items() if v > 0]
+        # 修改损失函数识别逻辑，支持嵌套配置
+        self.losses_names = []
+        for k, v in enc_losses_dict.items():
+            # 检查是否是字典类型配置（包括OmegaConf的DictConfig）
+            if hasattr(v, 'get') or isinstance(v, dict):
+                # 如果是字典类型，检查是否有lambda权重
+                lambda_val = v.get('lambda', 0) if hasattr(v, 'get') else v.get('lambda', 0)
+                if lambda_val > 0:
+                    self.losses_names.append(k)
+            else:
+                # 如果是简单数值，直接比较
+                try:
+                    if float(v) > 0:
+                        self.losses_names.append(k)
+                except (ValueError, TypeError):
+                    # 如果无法转换为数值，跳过
+                    continue
+        
         self.losses = {}
         self.adv_losses = {}
         self.other_losses = {}
         self.device = device
 
         for loss in self.losses_names:
+            loss_config = enc_losses_dict[loss]
+            
+            # 提取损失函数参数
+            if hasattr(loss_config, 'get') or isinstance(loss_config, dict):
+                loss_kwargs = {k: v for k, v in loss_config.items() if k != 'lambda'}
+            else:
+                loss_kwargs = {}
+            
             if loss in losses.classes.keys():
+                try:
+                    # 尝试传递参数
+                    self.losses[loss] = losses[loss](**loss_kwargs).to(self.device).eval()
+                except TypeError:
+                    # 如果失败，回退到不传参数的方式（向后兼容）
+                    if loss_kwargs:  # 只有当有参数时才提示
+                        print(f"警告：损失函数 {loss} 不支持参数 {loss_kwargs}，使用默认参数")
                 self.losses[loss] = losses[loss]().to(self.device).eval()
             elif loss in adv_losses.classes.keys():
+                try:
+                    self.adv_losses[loss] = adv_losses[loss](**loss_kwargs)
+                except TypeError:
+                    if loss_kwargs:
+                        print(f"警告：对抗损失函数 {loss} 不支持参数 {loss_kwargs}，使用默认参数")
                 self.adv_losses[loss] = adv_losses[loss]()
             elif loss in other_losses.classes.keys():
+                try:
+                    self.other_losses[loss] = other_losses[loss](**loss_kwargs)
+                except TypeError:
+                    if loss_kwargs:
+                        print(f"警告：其他损失函数 {loss} 不支持参数 {loss_kwargs}，使用默认参数")
                 self.other_losses[loss] = other_losses[loss]()
             else:
                 raise ValueError(f'Unexepted loss: {loss}')
@@ -45,19 +87,40 @@ class LossBuilder:
 
         for loss_name, loss in self.losses.items():
             loss_val = loss(batch_data["y_hat"], batch_data["x"])
-            global_loss += self.coefs_dict[loss_name] * loss_val
+            # 获取权重系数
+            loss_config = self.coefs_dict[loss_name]
+            if hasattr(loss_config, 'get') or isinstance(loss_config, dict):
+                weight = loss_config.get('lambda', 1.0) if hasattr(loss_config, 'get') else loss_config.get('lambda', 1.0)
+            else:
+                weight = float(loss_config)
+            
+            global_loss += weight * loss_val
             loss_dict[loss_name] = float(loss_val)
 
         for loss_name, loss in self.other_losses.items():
             loss_val = loss(batch_data)
             assert torch.isfinite(loss_val)
-            global_loss += self.coefs_dict[loss_name] * loss_val
+            # 获取权重系数
+            loss_config = self.coefs_dict[loss_name]
+            if hasattr(loss_config, 'get') or isinstance(loss_config, dict):
+                weight = loss_config.get('lambda', 1.0) if hasattr(loss_config, 'get') else loss_config.get('lambda', 1.0)
+            else:
+                weight = float(loss_config)
+            
+            global_loss += weight * loss_val
             loss_dict[loss_name] = float(loss_val)
 
         if batch_data["use_adv_loss"]:
             for loss_name, loss in self.adv_losses.items():
                 loss_val = loss(batch_data["fake_preds"])
-                global_loss += self.coefs_dict[loss_name] * loss_val
+                # 获取权重系数
+                loss_config = self.coefs_dict[loss_name]
+                if hasattr(loss_config, 'get') or isinstance(loss_config, dict):
+                    weight = loss_config.get('lambda', 1.0) if hasattr(loss_config, 'get') else loss_config.get('lambda', 1.0)
+                else:
+                    weight = float(loss_config)
+                
+                global_loss += weight * loss_val
                 loss_dict[loss_name] = float(loss_val)
 
         return global_loss, loss_dict
@@ -409,3 +472,355 @@ class GradientVarianceLoss(nn.Module):
         
         # 返回两个方向梯度差异的平均值
         return (grad_diff_x + grad_diff_y) / 2.0
+
+
+# ==========================================
+# VivFace特定损失函数
+# ==========================================
+
+@other_losses.add_to_registry(name="L_self")
+class VivFaceSelfReconLoss(nn.Module):
+    """
+    VivFace自重建损失 (S→S_hat)
+    
+    结合MSE、LPIPS和梯度方差损失的重建损失
+    支持可配置的权重参数
+    """
+    def __init__(self, l2_lambda=1.0, lpips_lambda=0.8, gv_lambda=0.1):
+        super().__init__()
+        self.l2_lambda = l2_lambda
+        self.lpips_lambda = lpips_lambda 
+        self.gv_lambda = gv_lambda
+        
+        self.mse_loss = nn.MSELoss()
+        # 延迟初始化LPIPS和梯度方差损失
+        self.lpips_loss = None
+        self.grad_criterion = None
+        self.initialized = False
+    
+    def _initialize_losses(self, device):
+        """延迟初始化损失函数"""
+        if not self.initialized:
+            self.lpips_loss = LPIPS(net_type='alex').to(device).eval()
+            # 导入梯度方差损失
+            try:
+                from criteria.gradient_variance_loss import GradientVariance
+                self.grad_criterion = GradientVariance(patch_size=None)
+            except ImportError:
+                print("警告：无法导入梯度方差损失，使用MSE替代")
+                self.grad_criterion = None
+            self.initialized = True
+    
+    def forward(self, batch):
+        S = batch["S"]
+        S_hat = batch["S_hat"]
+        
+        # 延迟初始化
+        if not self.initialized:
+            self._initialize_losses(S.device)
+        
+        # MSE损失
+        l2_loss = self.mse_loss(S_hat, S)
+        
+        # LPIPS感知损失
+        lpips_loss = self.lpips_loss(S_hat, S).mean()
+        
+        # 梯度方差损失
+        if self.grad_criterion is not None:
+            gv_loss = self.grad_criterion(S_hat, S)
+        else:
+            gv_loss = 0.0
+        
+        # 应用权重组合
+        total_loss = self.l2_lambda * l2_loss + self.lpips_lambda * lpips_loss + self.gv_lambda * gv_loss
+        
+        return total_loss
+
+@other_losses.add_to_registry(name="L_reenact")
+class VivFaceReenactLoss(nn.Module):
+    """
+    VivFace重演损失 (D1→S_D1)
+    
+    同样结合MSE、LPIPS和梯度方差损失
+    支持可配置的权重参数
+    """
+    def __init__(self, l2_lambda=1.0, lpips_lambda=0.8, gv_lambda=0.1):
+        super().__init__()
+        self.l2_lambda = l2_lambda
+        self.lpips_lambda = lpips_lambda 
+        self.gv_lambda = gv_lambda
+        
+        self.mse_loss = nn.MSELoss()
+        # 延迟初始化LPIPS和梯度方差损失
+        self.lpips_loss = None
+        self.grad_criterion = None
+        self.initialized = False
+    
+    def _initialize_losses(self, device):
+        """延迟初始化损失函数"""
+        if not self.initialized:
+            self.lpips_loss = LPIPS(net_type='alex').to(device).eval()
+            # 导入梯度方差损失
+            try:
+                from criteria.gradient_variance_loss import GradientVariance
+                self.grad_criterion = GradientVariance(patch_size=None)
+            except ImportError:
+                print("警告：无法导入梯度方差损失，使用MSE替代")
+                self.grad_criterion = None
+            self.initialized = True
+    
+    def forward(self, batch):
+        D1 = batch["D1"]
+        S_D1 = batch["S_D1"]
+        
+        # 延迟初始化
+        if not self.initialized:
+            self._initialize_losses(D1.device)
+        
+        # MSE损失
+        l2_loss = self.mse_loss(S_D1, D1)
+        
+        # LPIPS感知损失
+        lpips_loss = self.lpips_loss(S_D1, D1).mean()
+        
+        # 梯度方差损失
+        if self.grad_criterion is not None:
+            gv_loss = self.grad_criterion(S_D1, D1)
+        else:
+            gv_loss = 0.0
+        
+        # 应用权重组合
+        total_loss = self.l2_lambda * l2_loss + self.lpips_lambda * lpips_loss + self.gv_lambda * gv_loss
+        
+        return total_loss
+
+@other_losses.add_to_registry(name="L_latent_consistency")
+class VivFaceLatentConsistencyLoss(nn.Module):
+    """
+    VivFace潜在编码一致性损失
+    
+    确保S的w_latent与D2_S的w_latent一致
+    """
+    def __init__(self):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+    
+    def forward(self, batch):
+        S_latent = batch["S_latent"]
+        D2_S_latent = batch["D2_S_latent"]
+        
+        if S_latent is None or D2_S_latent is None:
+            return torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        return self.mse_loss(S_latent['w_latent'], D2_S_latent['w_latent'])
+
+@other_losses.add_to_registry(name="L_ss_latent_consistency")
+class VivFaceSSLatentConsistencyLoss(nn.Module):
+    """
+    VivFace StyleSpace潜在编码一致性损失
+    
+    确保D2的ss_generic_latent与D2_S的ss_generic_latent一致
+    """
+    def __init__(self):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+    
+    def forward(self, batch):
+        D2_latent = batch["D2_latent"]
+        D2_S_latent = batch["D2_S_latent"]
+        
+        if D2_latent is None or D2_S_latent is None:
+            return torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        return self.mse_loss(D2_latent['ss_generic_latent'], D2_S_latent['ss_generic_latent'])
+
+@other_losses.add_to_registry(name="L_ss_latent_regularization")
+class VivFaceSSLatentRegularizationLoss(nn.Module):
+    """
+    VivFace StyleSpace潜在编码正则化损失
+    
+    基于ViVFace原始实现：
+    loss_dict['L_ss_latent_regularization'] = self.opts.delta_norm_lambda*self.opts.s_lambda*self.mse_loss(D1_latent['ss_generic_latent'], torch.zeros_like(D1_latent['ss_generic_latent']).cuda())
+    
+    鼓励D1的ss_generic_latent接近零（稀疏性）
+    """
+    def __init__(self, delta_norm_lambda=2e-4, s_lambda=0.2):
+        super().__init__()
+        self.mse_loss = nn.MSELoss()
+        self.delta_norm_lambda = delta_norm_lambda
+        self.s_lambda = s_lambda
+    
+    def forward(self, batch):
+        D1_latent = batch["D1_latent"]
+        
+        if D1_latent is None:
+            return torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        # 使用ss_generic_latent而不是ss_latent
+        ss_generic_latent = D1_latent['ss_generic_latent']
+        zero_ss_latent = torch.zeros_like(ss_generic_latent).to(ss_generic_latent.device)
+        
+        # 应用ViVFace的权重组合：delta_norm_lambda * s_lambda
+        loss = self.delta_norm_lambda * self.s_lambda * self.mse_loss(ss_generic_latent, zero_ss_latent)
+        
+        return loss
+
+@other_losses.add_to_registry(name="loss_id")
+class VivFaceIdentityLoss(nn.Module):
+    """
+    VivFace身份保持损失
+    
+    使用预训练的人脸识别网络确保身份一致性
+    """
+    def __init__(self):
+        super().__init__()
+        self.id_loss = None
+        self.initialized = False
+    
+    def _initialize_loss(self, device):
+        """延迟初始化身份损失"""
+        if not self.initialized:
+            try:
+                from criteria import id_loss
+                self.id_loss = id_loss.IDLoss().to(device).eval()
+                print("成功加载身份损失函数")
+            except ImportError:
+                print("警告：无法导入身份损失，跳过身份损失计算")
+                self.id_loss = None
+            self.initialized = True
+    
+    def forward(self, batch):
+        S = batch["S"]
+        S_neutral = batch["S_neutral"]
+        D2_S = batch["D2_S"]
+        
+        # 延迟初始化
+        if not self.initialized:
+            self._initialize_loss(S.device)
+        
+        if self.id_loss is None:
+            return torch.tensor(0.0, device=S.device, requires_grad=True)
+        
+        if S_neutral is None or D2_S is None:
+            return torch.tensor(0.0, device=S.device, requires_grad=True)
+        
+        # 计算两个身份损失
+        loss_id_a, _, _ = self.id_loss(S_neutral, S, S_neutral)
+        loss_id_b, _, _ = self.id_loss(D2_S, S, D2_S)
+        
+        return loss_id_a + loss_id_b
+
+@other_losses.add_to_registry(name="delta_losses")
+class VivFaceDeltaLoss(nn.Module):
+    """
+    VivFace渐进式delta损失
+    
+    控制各层delta的幅度，支持渐进式训练
+    """
+    def __init__(self, delta_norm=2, delta_norm_lambda=1.0):
+        super().__init__()
+        self.delta_norm = delta_norm
+        self.delta_norm_lambda = delta_norm_lambda
+    
+    def forward(self, batch):
+        S_latent = batch["S_latent"]
+        progressive_stage = batch["progressive_stage"]
+        
+        if S_latent is None or progressive_stage is None:
+            return torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        # 如果是推理阶段（18），不计算delta损失
+        if progressive_stage.value == 18:
+            return torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        total_delta_loss = torch.tensor(0.0, device=batch["S"].device, requires_grad=True)
+        
+        # 获取w_latent
+        w_latent = S_latent['w_latent']  # [batch, 18, 512]
+        first_w = w_latent[:, 0, :]  # [batch, 512]
+        
+        # 计算从第1层到当前训练阶段的delta损失
+        for i in range(1, progressive_stage.value + 1):
+            delta = w_latent[:, i, :] - first_w
+            delta_loss = torch.norm(delta, self.delta_norm, dim=1).mean()
+            total_delta_loss = total_delta_loss + self.delta_norm_lambda * delta_loss
+        
+        return total_delta_loss
+
+@adv_losses.add_to_registry(name="encoder_discriminator_loss")
+class VivFaceEncoderDiscriminatorLoss:
+    """
+    VivFace编码器判别器对抗损失
+    
+    用于训练编码器欺骗W判别器
+    """
+    def __call__(self, fake_preds):
+        # fake_preds实际上是w_latent，需要进一步处理
+        # 这个会在LossBuilder中处理判别器的调用
+        if isinstance(fake_preds, torch.Tensor):
+            return F.softplus(-fake_preds).mean()
+        else:
+            # 如果传入的是w_latent，返回0（会在train_step中单独处理）
+            return torch.tensor(0.0, device=fake_preds['w_latent'].device if isinstance(fake_preds, dict) else fake_preds.device)
+
+# ==========================================
+# VivFace W判别器损失
+# ==========================================
+
+@disc_losses.add_to_registry(name="w_discriminator")
+class VivFaceWDiscriminatorLoss:
+    """
+    VivFace W判别器损失
+    
+    专门用于训练W空间的判别器，区分真实和生成的w编码
+    """
+    def __init__(self, coef=1.0, r1_gamma=10.0):
+        self.coef = coef
+        self.r1_gamma = r1_gamma
+
+    def __call__(self, w_disc, loss_input):
+        """
+        计算W判别器损失
+        
+        Args:
+            w_disc: W判别器
+            loss_input: 包含真实和虚假w编码的输入
+        """
+        loss_dict = {}
+        
+        # 获取真实和虚假的w编码
+        fake_w = loss_input.get("fake_w", None)
+        real_w = loss_input.get("real_w", None)
+        
+        if fake_w is None or real_w is None:
+            return torch.tensor(0.0), loss_dict
+        
+        # 判别器预测
+        fake_preds = w_disc(fake_w)
+        real_preds = w_disc(real_w)
+        
+        # 计算判别器损失
+        real_loss = F.softplus(-real_preds).mean()
+        fake_loss = F.softplus(fake_preds).mean()
+        
+        disc_loss = real_loss + fake_loss
+        
+        loss_dict["w_disc/real_loss"] = float(real_loss)
+        loss_dict["w_disc/fake_loss"] = float(fake_loss)
+        loss_dict["w_disc/total_loss"] = float(disc_loss)
+        
+        # R1正则化（如果启用）
+        if self.r1_gamma > 0:
+            real_w.requires_grad_(True)
+            real_preds_for_grad = w_disc(real_w)
+            r1_grads = torch.autograd.grad(
+                outputs=real_preds_for_grad.sum(),
+                inputs=real_w,
+                create_graph=True
+            )[0]
+            r1_penalty = r1_grads.pow(2).sum([1]).mean()
+            
+            disc_loss = disc_loss + self.r1_gamma * r1_penalty
+            loss_dict["w_disc/r1_penalty"] = float(r1_penalty)
+        
+        return self.coef * disc_loss, loss_dict
